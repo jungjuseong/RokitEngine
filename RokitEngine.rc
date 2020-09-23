@@ -1,4 +1,4 @@
-main ICON "OrganRegeneratorEngine.ico"
+main ICON "RokitEngine.ico"
 
 1 VERSIONINFO
 FILEVERSION     1,0,0,0
@@ -11,10 +11,10 @@ BEGIN
       VALUE "CompanyName", "Ultimaker BV."
       VALUE "FileDescription", "Slicing engine for OrganRegenerator"
       VALUE "FileVersion", "1.0"
-      VALUE "InternalName", "OrganRegeneratorEngine"
+      VALUE "InternalName", "RokitEngine"
       VALUE "LegalCopyright", "Ultimaker BV."
-      VALUE "OriginalFilename", "OrganRegeneratorEngine.exe"
-      VALUE "ProductName", "OrganRegeneratorEngine"
+      VALUE "OriginalFilename", "RokitEngine.exe"
+      VALUE "ProductName", "RokitEngine"
       VALUE "ProductVersion", "1.0"
     END
   END

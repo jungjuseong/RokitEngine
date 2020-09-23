@@ -1,6 +1,6 @@
 Generating Areas
 ====
-After CuraEngine has created cross sections of your model, it will subdivide each layer into zones that it designates to be filled with material to serve a certain purpose. The most significant of these "features" are infill, skin, walls and support. The input of this slicing stage is a set of layers, and the output is a bunch of polygons for each of those layers. Those polygons are grouped by feature: Whether they must be filled with infill, skin, etc.
+After RokitEngine has created cross sections of your model, it will subdivide each layer into zones that it designates to be filled with material to serve a certain purpose. The most significant of these "features" are infill, skin, walls and support. The input of this slicing stage is a set of layers, and the output is a bunch of polygons for each of those layers. Those polygons are grouped by feature: Whether they must be filled with infill, skin, etc.
 
 Separating Out the Walls
 ----
@@ -20,7 +20,7 @@ Lastly, one additional inset is produced from the innermost wall, by half of the
 
 Separating Skin from Infill
 ----
-CuraEngine then needs to fill this middle inset with skin and infill. It needs to determine where to place skin and where to place infill.
+RokitEngine then needs to fill this middle inset with skin and infill. It needs to determine where to place skin and where to place infill.
 
 The basic technique to find areas that need to be filled with bottom skin (for instance) is to look several layers below you, depending on the thickness of the skin. Wherever there's air in the lower layer, there must be skin in the current layer.
 
@@ -28,9 +28,9 @@ The basic technique to find areas that need to be filled with bottom skin (for i
 
 In the images above, the layer that it's subdividing into skin and infill is shown in red. It's looking at the blue layer to determine what part of this area is going to become skin and what is going to become infill. The parts that are inside the red area but not the blue area will become skin. The parts that are in both the red and the blue areas will become infill.
 
-Reality is slightly more complex though: CuraEngine must look not only at the layer that is one skin thickness below the current layer, but also all layers in between. Otherwise a gap in the layers that is smaller than the skin thickness will not be picked up.
+Reality is slightly more complex though: RokitEngine must look not only at the layer that is one skin thickness below the current layer, but also all layers in between. Otherwise a gap in the layers that is smaller than the skin thickness will not be picked up.
 
-For the top skin, CuraEngine must look to the layers above the current layer, instead of at layers below it.
+For the top skin, RokitEngine must look to the layers above the current layer, instead of at layers below it.
 
 Support
 ----
@@ -42,7 +42,7 @@ A normal, filled layer is assumed to support the layer that's above it. It will 
 
 ![Formula for support distance](assets/support_distance_formula.svg)
 
-CuraEngine will perform an offset of the current layer (drawn below in black) by this support distance (drawn in gray), and then subtract that from the layer above to get the area that is called the "basic support" (drawn in blue).
+RokitEngine will perform an offset of the current layer (drawn below in black) by this support distance (drawn in gray), and then subtract that from the layer above to get the area that is called the "basic support" (drawn in blue).
 
 ![Basic support](assets/support_basic.svg)
 
@@ -66,7 +66,7 @@ The Z distance is maintained by not looking directly at the part that needs to b
 
 ![Applied Z distance](assets/support_z_distance.png)
 
-If the slope is very steep or there is a bit of overhang next to a vertical wall, this would still cause problems since the support is still very close to the sides of the print. This can be seen in the image above at the bottom side of the print. For this reason, CuraEngine also maintains a horizontal distance, the Support X/Y Distance setting.
+If the slope is very steep or there is a bit of overhang next to a vertical wall, this would still cause problems since the support is still very close to the sides of the print. This can be seen in the image above at the bottom side of the print. For this reason, RokitEngine also maintains a horizontal distance, the Support X/Y Distance setting.
 
 This introduces two constraints in the distance that support must keep to the model however: It must maintain a certain Z distance and a certain X/Y distance. Neither of these may be too small or too large. This is overconstrained, so one of them must supersede the other. This is determined by the Support Distance Priority setting, which can be set to prioritise either the Z distance or the X/Y distance. By default, the Z distance is prioritised. This causes our print to look a bit like this:
 
