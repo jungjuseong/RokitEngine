@@ -1,6 +1,6 @@
 Glossary
 ========
-This page explains some of the terms used throughout RokitEngine's code and documentation. Some terms are broadly used throughout the 3D printing industry. Some are specific to Cura.
+This page explains some of the terms used throughout CuraEngine's code and documentation. Some terms are broadly used throughout the 3D printing industry. Some are specific to Cura.
 
 3D Printing Terms
 ----
@@ -35,4 +35,4 @@ Skin | The top and bottom of the printed part. This is generated using a separat
 Tower | A strut to reinforce parts of the print that would otherwise not be supported because they have no area. Used to support corners and edges pointing downwards.
 Wall | The contour of a layer. They are typically comprised of inner walls and outer walls. The terms "inner" and "outer" do not refer to the actual shape of the printed object, but rather indicate on which side of the wall they are. The outer walls form the surface touching the air (and support material) outside the model. The inner walls form the surface touching the infill and skin.
 Wire printing | Also known as weaving or Neith. A non-layer-wise form of printing a net of strings to create the rough shape of your model.
-Winding order | A term in geometry indicating the order of the points forming a polygon. In RokitEngine, if the points around the polygon are in clockwise order, the polygon is considered to be a hole in the layer. If they are in counter-clockwise order, they are considered to be a solid area.
+Winding order | A term in geometry indicating the order of the points forming a polygon. In CuraEngine, if the points around the polygon are in clockwise order, the polygon is considered to be a hole in the layer. If they are in counter-clockwise order, they are considered to be a solid area.

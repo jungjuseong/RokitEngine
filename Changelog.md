@@ -1,4 +1,4 @@
-Changelog RokitEngine
+Changelog CuraEngine
 ====================
 
 

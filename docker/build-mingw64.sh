@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# This scripts uses CMake to build RokitEngine with static libraries using MinGW
+# This scripts uses CMake to build CuraEngine with static libraries using MinGW
 # W64 targeting Windows x64. It also creates a debian package with cpack. The
 # contents of the package are installed under "/usr/x86_64-w64-mingw32".
 #
@@ -57,8 +57,8 @@ make
 # Create DEB
 cpack \
     --config ../cmake/cpack_config_deb_mingw64.cmake \
-    -D CPACK_INSTALL_CMAKE_PROJECTS="$(pwd);RokitEngine;ALL;/"
+    -D CPACK_INSTALL_CMAKE_PROJECTS="$(pwd);CuraEngine;ALL;/"
 # Create ZIP
 cpack \
     --config ../cmake/cpack_config_zip_mingw64.cmake \
-    -D CPACK_INSTALL_CMAKE_PROJECTS="$(pwd);RokitEngine;ALL;/"
+    -D CPACK_INSTALL_CMAKE_PROJECTS="$(pwd);CuraEngine;ALL;/"
