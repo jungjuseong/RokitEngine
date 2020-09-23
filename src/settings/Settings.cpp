@@ -267,10 +267,6 @@ template<> EGCodeFlavor Settings::get<EGCodeFlavor>(const std::string& key) cons
     {
         return EGCodeFlavor::MACH3;
     }
-    else if (value == "RepRap (Volumetric)")
-    {
-        return EGCodeFlavor::MARLIN_VOLUMATRIC;
-    }
     else if (value == "Repetier")
     {
         return EGCodeFlavor::REPETIER;
@@ -278,6 +274,10 @@ template<> EGCodeFlavor Settings::get<EGCodeFlavor>(const std::string& key) cons
     else if (value == "RepRap (RepRap)")
     {
         return EGCodeFlavor::REPRAP;
+    }
+    else if (value == "Invivo4d6")
+    {
+        return EGCodeFlavor::INVIVO4D6;
     }
     //Default:
     return EGCodeFlavor::MARLIN;

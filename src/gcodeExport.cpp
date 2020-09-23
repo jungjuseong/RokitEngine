@@ -53,7 +53,7 @@ GCodeExport::GCodeExport()
     current_jerk = -1;
 
     is_z_hopped = 0;
-    setFlavor(EGCodeFlavor::MARLIN);
+    setFlavor(EGCodeFlavor::INVIVO4D6);
     initial_bed_temp = 0;
     build_volume_temperature = 0;
     machine_heated_build_volume = false;
@@ -148,14 +148,14 @@ const std::string GCodeExport::flavorToString(const EGCodeFlavor& flavor) const
             return "Makerbot";
         case EGCodeFlavor::ULTIGCODE:
             return "UltiGCode";
-        case EGCodeFlavor::MARLIN_VOLUMATRIC:
-            return "Marlin(Volumetric)";
         case EGCodeFlavor::GRIFFIN:
             return "Griffin";
         case EGCodeFlavor::REPETIER:
             return "Repetier";
         case EGCodeFlavor::REPRAP:
             return "RepRap";
+        case EGCodeFlavor::INVIVO4D6:
+            return "Invivo4d6";
         case EGCodeFlavor::MARLIN:
         default:
             return "Marlin";
@@ -236,7 +236,7 @@ std::string GCodeExport::getFileHeader(const std::vector<bool>& extruder_is_used
 
             prefix << ";NOZZLE_DIAMETER:" << Application::getInstance().current_slice->scene.extruders[0].settings.get<double>("machine_nozzle_size") << new_line;
         }
-        else if (flavor == EGCodeFlavor::REPRAP || flavor == EGCodeFlavor::MARLIN || flavor == EGCodeFlavor::MARLIN_VOLUMATRIC)
+        else if (flavor == EGCodeFlavor::INVIVO4D6 || flavor == EGCodeFlavor::MARLIN)
         {
             prefix << ";Filament used: ";
             if (filament_used.size() > 0)
@@ -247,14 +247,7 @@ std::string GCodeExport::getFileHeader(const std::vector<bool>& extruder_is_used
                     {
                         prefix << ", ";
                     }
-                    if (flavor != EGCodeFlavor::MARLIN_VOLUMATRIC)
-                    {
-                        prefix << filament_used[i] / (1000 * extruder_attr[i].filament_area) << "m";
-                    }
-                    else //Use volumetric filament used.
-                    {
-                        prefix << filament_used[i] << "mm3";
-                    }
+                    prefix << filament_used[i] / (1000 * extruder_attr[i].filament_area) << "m";
                 }
             }
             else
@@ -324,7 +317,7 @@ void GCodeExport::setFlavor(EGCodeFlavor flavor)
             extruder_attr[n].extruderCharacter = 'E';
         }
     }
-    if (flavor == EGCodeFlavor::ULTIGCODE || flavor == EGCodeFlavor::MARLIN_VOLUMATRIC)
+    if (flavor == EGCodeFlavor::ULTIGCODE)
     {
         is_volumetric = true;
     }
@@ -578,9 +571,10 @@ void GCodeExport::writeExtrusionMode(bool set_relative_extrusion_mode)
     {
         *output_stream << "M83 ;relative extrusion mode" << new_line;
     }
-    else
+    else 
     {
-        *output_stream << "M82 ;absolute extrusion mode" << new_line;
+        if (flavor != EGCodeFlavor::INVIVO4D6)
+            *output_stream << "M82 ;absolute extrusion mode" << new_line;
     }
 }
 
@@ -988,14 +982,10 @@ void GCodeExport::startExtruder(const size_t new_extruder)
     extruder_attr[new_extruder].is_used = true;
     if (new_extruder != current_extruder) // wouldn't be the case on the very first extruder start if it's extruder 0
     {
-        if (flavor == EGCodeFlavor::MAKERBOT)
-        {
-            *output_stream << "M135 T" << new_extruder << new_line;
-        }
-        else
-        {
-            *output_stream << "T" << new_extruder << new_line;
-        }
+        if (new_extruder > 0)
+            *output_stream << "D" << new_extruder << new_line;
+        else 
+            *output_stream << "D6" << new_line;        
     }
 
     current_extruder = new_extruder;
@@ -1143,6 +1133,10 @@ void GCodeExport::writeFanCommand(double speed)
     {
         return;
     }
+    if (flavor == EGCodeFlavor::INVIVO4D6) {
+        return;
+    }
+    
     if(flavor == EGCodeFlavor::MAKERBOT)
     {
         if(speed >= 50)
@@ -1180,6 +1174,9 @@ void GCodeExport::writeTemperatureCommand(const size_t extruder, const Temperatu
 {
     const ExtruderTrain& extruder_train = Application::getInstance().current_slice->scene.extruders[extruder];
 
+    if (flavor == EGCodeFlavor::INVIVO4D6)
+        return;
+
     if (!extruder_train.settings.get<bool>("machine_nozzle_temp_enabled"))
     {
         return;
@@ -1214,7 +1211,7 @@ void GCodeExport::writeTemperatureCommand(const size_t extruder, const Temperatu
 
     if (wait && flavor != EGCodeFlavor::MAKERBOT)
     {
-        if(flavor == EGCodeFlavor::MARLIN)
+        if (flavor == EGCodeFlavor::INVIVO4D6 || flavor == EGCodeFlavor::MARLIN)
         {
             *output_stream << "M105" << new_line; // get temperatures from the last update, the M109 will not let get the target temperature
         }
@@ -1244,20 +1241,19 @@ void GCodeExport::writeTemperatureCommand(const size_t extruder, const Temperatu
 
 void GCodeExport::writeBedTemperatureCommand(const Temperature& temperature, const bool wait)
 {
-    if (flavor == EGCodeFlavor::ULTIGCODE)
+    if (flavor == EGCodeFlavor::INVIVO4D6 || flavor == EGCodeFlavor::ULTIGCODE)
     { // The UM2 family doesn't support temperature commands (they are fixed in the firmware)
         return;
     }
 
     if (wait)
     {
-        if(flavor == EGCodeFlavor::MARLIN)
+        if (flavor == EGCodeFlavor::MARLIN)
         {
             *output_stream << "M140 S"; // set the temperature, it will be used as target temperature from M105
             *output_stream << PrecisionedDouble{1, temperature} << new_line;
             *output_stream << "M105" << new_line;
         }
-
         *output_stream << "M190 S";
     }
     else
@@ -1267,7 +1263,7 @@ void GCodeExport::writeBedTemperatureCommand(const Temperature& temperature, con
 
 void GCodeExport::writeBuildVolumeTemperatureCommand(const Temperature& temperature, const bool wait)
 {
-    if (flavor == EGCodeFlavor::ULTIGCODE || flavor == EGCodeFlavor::GRIFFIN)
+    if (flavor == EGCodeFlavor::INVIVO4D6 || flavor == EGCodeFlavor::ULTIGCODE || flavor == EGCodeFlavor::GRIFFIN)
     {
         //Ultimaker printers don't support build volume temperature commands.
         return;
@@ -1338,6 +1334,10 @@ void GCodeExport::writeTravelAcceleration(const Acceleration& acceleration)
 
 void GCodeExport::writeJerk(const Velocity& jerk)
 {
+    if (flavor == EGCodeFlavor::INVIVO4D6) {
+        return;
+    }
+
     if (current_jerk != jerk)
     {
         switch (getFlavor())

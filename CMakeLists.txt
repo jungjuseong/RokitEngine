@@ -284,7 +284,7 @@ set_target_properties(_CuraEngine PROPERTIES COMPILE_DEFINITIONS "VERSION=\"${CU
 
 if(WIN32)
   message(STATUS "Using windres")
-  set(RES_FILES "CuraEngine.rc")
+  set(RES_FILES "OrganRegeneratorEngine.rc")
   ENABLE_LANGUAGE(RC)
   if(NOT MSVC)
     SET(CMAKE_RC_COMPILER_INIT windres)

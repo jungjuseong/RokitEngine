@@ -489,7 +489,7 @@ void FffGcodeWriter::processInitialLayerTemperature(const SliceDataStorage& stor
         if (num_extruders > 1 || gcode.getFlavor() == EGCodeFlavor::REPRAP)
         {
             std::ostringstream tmp;
-            tmp << "T" << start_extruder_nr;
+            tmp << "D" << start_extruder_nr;
             gcode.writeLine(tmp.str().c_str());
         }
 
@@ -559,12 +559,12 @@ void FffGcodeWriter::processStartingCode(const SliceDataStorage& storage, const 
         gcode.writeCode(prefix.c_str());
     }
 
-    gcode.writeComment("Generated with Cura_SteamEngine " VERSION);
+    gcode.writeComment("Generated with OrganRegerator_Engine " VERSION);
 
     if (gcode.getFlavor() == EGCodeFlavor::GRIFFIN)
     {
         std::ostringstream tmp;
-        tmp << "T" << start_extruder_nr;
+        tmp << "D" << start_extruder_nr;
         gcode.writeLine(tmp.str().c_str());
     }
     else
