@@ -1,17 +1,17 @@
-CuraEngine
+RokitEngine
 ==========
-The CuraEngine is a C++ console application for 3D printing GCode generation. It has been made as a better and faster alternative to the old Skeinforge engine.
+The RokitEngine is a C++ console application for 3D printing GCode generation. It has been made as a better and faster alternative to the old Skeinforge engine.
 
-The CuraEngine is pure C++ and uses Clipper from http://www.angusj.com/delphi/clipper.php
+The RokitEngine is pure C++ and uses Clipper from http://www.angusj.com/delphi/clipper.php
 Furthermore it depends on libArcus by Ultimaker, which can be found at http://github.com/Ultimaker/libArcus
 
 This is just a console application for GCode generation. For a full graphical application look at https://github.com/Ultimaker/Cura which is the graphical frontend for CuraEngine.
 
-The CuraEngine can be used seperately or in other applications. Feel free to add it to your application. But please take note of the License.
+The RokitEngine can be used seperately or in other applications. Feel free to add it to your application. But please take note of the License.
 
 License
 =======
-CuraEngine is released under terms of the AGPLv3 License.
+RokitEngine is released under terms of the AGPLv3 License.
 Terms of the license can be found in the LICENSE file. Or at http://www.gnu.org/licenses/agpl.html
 
 But in general it boils down to: You need to share the source of any CuraEngine modifications if you make an application with the CuraEngine. (Even if you make a web-based slicer, you still need to share the source!)
