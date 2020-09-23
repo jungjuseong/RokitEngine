@@ -81,6 +81,13 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage, TimeKeeper& time_keep
     
     gcode.writeLayerCountComment(total_layers);
 
+    if (gcode.getFlavor() == EGCodeFlavor::INVIVO4D6)
+    {
+        std::ostringstream tmp;
+        tmp << "D" << start_extruder_nr;
+        gcode.writeLine(tmp.str().c_str());
+    }
+
     { // calculate the mesh order for each extruder
         const size_t extruder_count = Application::getInstance().current_slice->scene.extruders.size();
         mesh_order_per_extruder.clear(); // Might be not empty in case of sequential printing. 
@@ -476,15 +483,7 @@ void FffGcodeWriter::processInitialLayerTemperature(const SliceDataStorage& stor
     Scene& scene = Application::getInstance().current_slice->scene;
     const size_t num_extruders = scene.extruders.size();
 
-    if (gcode.getFlavor() == EGCodeFlavor::GRIFFIN)
-    {
-        ExtruderTrain& train = scene.extruders[start_extruder_nr];
-        constexpr bool wait = true;
-        const Temperature print_temp_0 = train.settings.get<Temperature>("material_print_temperature_layer_0");
-        const Temperature print_temp_here = (print_temp_0 != 0) ? print_temp_0 : train.settings.get<Temperature>("material_print_temperature");
-        gcode.writeTemperatureCommand(start_extruder_nr, print_temp_here, wait);
-    }
-    else if (gcode.getFlavor() != EGCodeFlavor::ULTIGCODE)
+    if (gcode.getFlavor() != EGCodeFlavor::INVIVO4D6)
     {
         if (num_extruders > 1 || gcode.getFlavor() == EGCodeFlavor::REPRAP)
         {
@@ -552,6 +551,8 @@ void FffGcodeWriter::processInitialLayerTemperature(const SliceDataStorage& stor
 
 void FffGcodeWriter::processStartingCode(const SliceDataStorage& storage, const size_t start_extruder_nr)
 {
+    gcode.writeComment("Generated with OrganRegerator_Engine " VERSION);
+
     std::vector<bool> extruder_is_used = storage.getExtrudersUsed();
     if (Application::getInstance().communication->isSequential()) //If we must output the g-code sequentially, we must already place the g-code header here even if we don't know the exact time/material usages yet.
     {
@@ -559,18 +560,7 @@ void FffGcodeWriter::processStartingCode(const SliceDataStorage& storage, const 
         gcode.writeCode(prefix.c_str());
     }
 
-    gcode.writeComment("Generated with OrganRegerator_Engine " VERSION);
-
-    if (gcode.getFlavor() == EGCodeFlavor::GRIFFIN)
-    {
-        std::ostringstream tmp;
-        tmp << "D" << start_extruder_nr;
-        gcode.writeLine(tmp.str().c_str());
-    }
-    else
-    {
-        processInitialLayerTemperature(storage, start_extruder_nr);
-    }
+    processInitialLayerTemperature(storage, start_extruder_nr);    
 
     const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
 
@@ -584,37 +574,20 @@ void FffGcodeWriter::processStartingCode(const SliceDataStorage& storage, const 
     Application::getInstance().communication->sendCurrentPosition(gcode.getPositionXY());
     gcode.startExtruder(start_extruder_nr);
 
-    if (gcode.getFlavor() == EGCodeFlavor::BFB)
-    {
-        gcode.writeComment("enable auto-retraction");
-        std::ostringstream tmp;
-        tmp << "M227 S" << (mesh_group_settings.get<coord_t>("retraction_amount") * 2560 / 1000) << " P" << (mesh_group_settings.get<coord_t>("retraction_amount") * 2560 / 1000);
-        gcode.writeLine(tmp.str().c_str());
-    }
-    else if (gcode.getFlavor() == EGCodeFlavor::GRIFFIN)
-    { // initialize extruder trains
-        ExtruderTrain& train = Application::getInstance().current_slice->scene.extruders[start_extruder_nr];
-        processInitialLayerTemperature(storage, start_extruder_nr);
-        gcode.writePrimeTrain(train.settings.get<Velocity>("speed_travel"));
-        extruder_prime_layer_nr[start_extruder_nr] = std::numeric_limits<int>::min(); // set to most negative number so that layer processing never primes this extruder any more.
-        const RetractionConfig& retraction_config = storage.retraction_config_per_extruder[start_extruder_nr];
-        gcode.writeRetraction(retraction_config);
-    }
     if (mesh_group_settings.get<bool>("relative_extrusion"))
     {
         gcode.writeExtrusionMode(true);
     }
-    if (gcode.getFlavor() != EGCodeFlavor::GRIFFIN)
-    {
-        if (mesh_group_settings.get<bool>("retraction_enable"))
-        {
-            // ensure extruder is zeroed
-            gcode.resetExtrusionValue();
 
-            // retract before first travel move
-            gcode.writeRetraction(storage.retraction_config_per_extruder[start_extruder_nr]);
-        }
+    if (mesh_group_settings.get<bool>("retraction_enable"))
+    {
+        // ensure extruder is zeroed
+        gcode.resetExtrusionValue();
+
+        // retract before first travel move
+        gcode.writeRetraction(storage.retraction_config_per_extruder[start_extruder_nr]);
     }
+    
     gcode.setExtruderFanNumber(start_extruder_nr);
 }
 

@@ -66,6 +66,7 @@ GCodeExport::GCodeExport()
     new_line = "\n";
 
     total_bounding_box = AABB3D();
+
 }
 
 GCodeExport::~GCodeExport()
@@ -227,36 +228,28 @@ std::string GCodeExport::getFileHeader(const std::vector<bool>& extruder_is_used
         prefix << ";END_OF_HEADER" << new_line;
         break;
     default:
-        prefix << ";FLAVOR:" << flavorToString(flavor) << new_line;
+        prefix <<  ";F/W : 7.7.1.x" << new_line;
         prefix << ";TIME:" << ((print_time)? static_cast<int>(*print_time) : 6666) << new_line;
-        if (flavor == EGCodeFlavor::ULTIGCODE)
-        {
-            prefix << ";MATERIAL:" << ((filament_used.size() >= 1)? static_cast<int>(filament_used[0]) : 6666) << new_line;
-            prefix << ";MATERIAL2:" << ((filament_used.size() >= 2)? static_cast<int>(filament_used[1]) : 0) << new_line;
 
-            prefix << ";NOZZLE_DIAMETER:" << Application::getInstance().current_slice->scene.extruders[0].settings.get<double>("machine_nozzle_size") << new_line;
-        }
-        else if (flavor == EGCodeFlavor::INVIVO4D6 || flavor == EGCodeFlavor::MARLIN)
+        prefix << ";Filament used: ";
+        if (filament_used.size() > 0)
         {
-            prefix << ";Filament used: ";
-            if (filament_used.size() > 0)
+            for (unsigned i = 0; i < filament_used.size(); ++i)
             {
-                for (unsigned i = 0; i < filament_used.size(); ++i)
+                if (i > 0)
                 {
-                    if (i > 0)
-                    {
-                        prefix << ", ";
-                    }
-                    prefix << filament_used[i] / (1000 * extruder_attr[i].filament_area) << "m";
+                    prefix << ", ";
                 }
+                prefix << filament_used[i] / (1000 * extruder_attr[i].filament_area) << "m";
             }
-            else
-            {
-                prefix << "0m";
-            }
-            prefix << new_line;
-            prefix << ";Layer height: " << Application::getInstance().current_slice->scene.current_mesh_group->settings.get<double>("layer_height") << new_line;
         }
+        else
+        {
+            prefix << "0m";
+        }
+        prefix << new_line;
+        prefix << ";Layer height: " << Application::getInstance().current_slice->scene.current_mesh_group->settings.get<double>("layer_height") << new_line;
+        
         prefix << ";MINX:" << INT2MM(total_bounding_box.min.x) << new_line;
         prefix << ";MINY:" << INT2MM(total_bounding_box.min.y) << new_line;
         prefix << ";MINZ:" << INT2MM(total_bounding_box.min.z) << new_line;
@@ -712,6 +705,13 @@ void GCodeExport::writeTravel(const coord_t& x, const coord_t& y, const coord_t&
     const double layer_height = Application::getInstance().current_slice->scene.current_mesh_group->settings.get<double>("layer_height");
     Application::getInstance().communication->sendLineTo(travel_move_type, Point(x, y), display_width, layer_height, speed);
 
+    const Settings& extruder_settings = Application::getInstance().current_slice->scene.extruders[getExtruderNr()].settings;
+    const std::string nozzle = extruder_settings.get<std::string>("machine_nozzle_id").c_str();    
+    
+    if (nozzle.substr(0,3).compare("FFF") != 0 && nozzle.substr(0,3).compare("Ext") != 0)
+        if (currentSpeed != speed)
+            *output_stream << "M330 ;+" << new_line;
+
     *output_stream << "G0";
     writeFXYZE(speed, x, y, z, current_e_value, travel_move_type);
 }
@@ -780,6 +780,15 @@ void GCodeExport::writeExtrusion(const int x, const int y, const int z, const Ve
 
     extruder_attr[current_extruder].last_e_value_after_wipe += extrusion_per_mm * diff.vSizeMM();
     double new_e_value = current_e_value + extrusion_per_mm * diff.vSizeMM();
+    
+    const Settings& extruder_settings = Application::getInstance().current_slice->scene.extruders[getExtruderNr()].settings;
+    const std::string nozzle = extruder_settings.get<std::string>("machine_nozzle_id").c_str();    
+
+    //*output_stream << ";Nozzle: " << nozzle.substr(0,3) << nozzle.substr(0,3).compare("FFF") << new_line;
+    
+    if (nozzle.substr(0,3).compare("FFF") != 0 && nozzle.substr(0,3).compare("Ext") != 0)
+        if (currentSpeed != speed)
+            *output_stream << "M301 ;+" << new_line;
 
     *output_stream << "G1";
     writeFXYZE(speed, x, y, z, new_e_value, feature);
@@ -797,14 +806,24 @@ void GCodeExport::writeFXYZE(const Velocity& speed, const int x, const int y, co
     total_bounding_box.include(Point3(gcode_pos.X, gcode_pos.Y, z));
 
     *output_stream << " X" << MMtoStream{gcode_pos.X} << " Y" << MMtoStream{gcode_pos.Y};
-    if (z != currentPosition.z)
+    if (currentPosition.z - z > 0)
     {
-        *output_stream << " Z" << MMtoStream{z};
+        *output_stream << new_line << ";Z:" << z << ":" << currentPosition.z << new_line;
+
+        if (getExtruderNr() == 0 && currentSpeed == speed)
+            *output_stream << "G0 Z" << MMtoStream{z};
+        else
+            *output_stream << "G0 C" << MMtoStream{z};
     }
+
+    const Settings& extruder_settings = Application::getInstance().current_slice->scene.extruders[current_extruder].settings;
+    const char* nozzle = extruder_settings.get<std::string>("machine_nozzle_id").c_str();
+
     if (e + current_e_offset != current_e_value)
     {
         const double output_e = (relative_extrusion)? e + current_e_offset - current_e_value : e + current_e_offset;
-        *output_stream << " " << extruder_attr[current_extruder].extruderCharacter << PrecisionedDouble{5, output_e};
+        if (strncmp(nozzle,"Extruder",8) == 0 || strncmp(nozzle,"FFF",3) == 0)
+            *output_stream << " " << extruder_attr[current_extruder].extruderCharacter << PrecisionedDouble{5, output_e};
     }
     *output_stream << new_line;
     
@@ -828,7 +847,8 @@ void GCodeExport::writeUnretractionAndPrime()
             if (prime_volume != 0)
             {
                 const double output_e = (relative_extrusion)? prime_volume_e : current_e_value;
-                *output_stream << "G1 F" << PrecisionedDouble{1, extruder_attr[current_extruder].last_retraction_prime_speed * 60} << " " << extruder_attr[current_extruder].extruderCharacter << PrecisionedDouble{5, output_e} << new_line;
+                *output_stream << "G1 F" << PrecisionedDouble{1, extruder_attr[current_extruder].last_retraction_prime_speed * 60} 
+                    << " " << extruder_attr[current_extruder].extruderCharacter << PrecisionedDouble{5, output_e} << new_line;
                 currentSpeed = extruder_attr[current_extruder].last_retraction_prime_speed;
             }
             estimateCalculator.plan(TimeEstimateCalculator::Position(INT2MM(currentPosition.x), INT2MM(currentPosition.y), INT2MM(currentPosition.z), eToMm(current_e_value)), 25.0, PrintFeatureType::MoveRetraction);
@@ -837,7 +857,8 @@ void GCodeExport::writeUnretractionAndPrime()
         {
             current_e_value += extruder_attr[current_extruder].retraction_e_amount_current;
             const double output_e = (relative_extrusion)? extruder_attr[current_extruder].retraction_e_amount_current + prime_volume_e : current_e_value;
-            *output_stream << "G1 F" << PrecisionedDouble{1, extruder_attr[current_extruder].last_retraction_prime_speed * 60} << " " << extruder_attr[current_extruder].extruderCharacter << PrecisionedDouble{5, output_e} << new_line;
+            *output_stream << "G1 F" << PrecisionedDouble{1, extruder_attr[current_extruder].last_retraction_prime_speed * 60} 
+                << " " << extruder_attr[current_extruder].extruderCharacter << PrecisionedDouble{5, output_e} << ";(ENGINE) unretraction" << new_line;
             currentSpeed = extruder_attr[current_extruder].last_retraction_prime_speed;
             estimateCalculator.plan(TimeEstimateCalculator::Position(INT2MM(currentPosition.x), INT2MM(currentPosition.y), INT2MM(currentPosition.z), eToMm(current_e_value)), currentSpeed, PrintFeatureType::MoveRetraction);
         }
@@ -846,7 +867,7 @@ void GCodeExport::writeUnretractionAndPrime()
     {
         const double output_e = (relative_extrusion)? prime_volume_e : current_e_value;
         *output_stream << "G1 F" << PrecisionedDouble{1, extruder_attr[current_extruder].last_retraction_prime_speed * 60} << " " << extruder_attr[current_extruder].extruderCharacter;
-        *output_stream << PrecisionedDouble{5, output_e} << new_line;
+        *output_stream << PrecisionedDouble{5, output_e} << ";(ENGINE) prime_volume != 0"  << new_line;
         currentSpeed = extruder_attr[current_extruder].last_retraction_prime_speed;
         estimateCalculator.plan(TimeEstimateCalculator::Position(INT2MM(currentPosition.x), INT2MM(currentPosition.y), INT2MM(currentPosition.z), eToMm(current_e_value)), currentSpeed, PrintFeatureType::NoneType);
     }
@@ -932,7 +953,7 @@ void GCodeExport::writeRetraction(const RetractionConfig& config, bool force, bo
         double speed = ((retraction_diff_e_amount < 0.0)? config.speed : extr_attr.last_retraction_prime_speed) * 60;
         current_e_value += retraction_diff_e_amount;
         const double output_e = (relative_extrusion)? retraction_diff_e_amount : current_e_value;
-        *output_stream << "G1 F" << PrecisionedDouble{1, speed} << " " << extr_attr.extruderCharacter << PrecisionedDouble{5, output_e} << new_line;
+        *output_stream << "G1 F" << PrecisionedDouble{1, speed} << " " << extr_attr.extruderCharacter << PrecisionedDouble{5, output_e} << ";(ENGINE) retraction" << new_line;
         currentSpeed = speed;
         estimateCalculator.plan(TimeEstimateCalculator::Position(INT2MM(currentPosition.x), INT2MM(currentPosition.y), INT2MM(currentPosition.z), eToMm(current_e_value)), currentSpeed, PrintFeatureType::MoveRetraction);
         extr_attr.last_retraction_prime_speed = config.primeSpeed;
@@ -954,7 +975,7 @@ void GCodeExport::writeZhopStart(const coord_t hop_height, Velocity speed/*= 0*/
         }
         is_z_hopped = hop_height;
         currentSpeed = speed;
-        *output_stream << "G1 F" << PrecisionedDouble{1, speed * 60} << " Z" << MMtoStream{current_layer_z + is_z_hopped} << new_line;
+        *output_stream << "G1 F" << PrecisionedDouble{1, speed * 60} << " Z" << MMtoStream{current_layer_z + is_z_hopped} << ";(ENGINE) z hop start" << new_line;
         total_bounding_box.includeZ(current_layer_z + is_z_hopped);
         assert(speed > 0.0 && "Z hop speed should be positive.");
     }
@@ -972,7 +993,7 @@ void GCodeExport::writeZhopEnd(Velocity speed/*= 0*/)
         is_z_hopped = 0;
         currentPosition.z = current_layer_z;
         currentSpeed = speed;
-        *output_stream << "G1 F" << PrecisionedDouble{1, speed * 60} << " Z" << MMtoStream{current_layer_z} << new_line;
+        *output_stream << "G1 F" << PrecisionedDouble{1, speed * 60} << " Z" << MMtoStream{current_layer_z} << ";z hop end" << new_line;
         assert(speed > 0.0 && "Z hop speed should be positive.");
     }
 }
@@ -982,10 +1003,7 @@ void GCodeExport::startExtruder(const size_t new_extruder)
     extruder_attr[new_extruder].is_used = true;
     if (new_extruder != current_extruder) // wouldn't be the case on the very first extruder start if it's extruder 0
     {
-        if (new_extruder > 0)
-            *output_stream << "D" << new_extruder << new_line;
-        else 
-            *output_stream << "D6" << new_line;        
+        *output_stream << "D" << new_extruder << new_line;
     }
 
     current_extruder = new_extruder;
