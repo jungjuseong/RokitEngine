@@ -155,6 +155,8 @@ private:
     Temperature initial_bed_temp; //!< bed temperature at the beginning of the print.
     Temperature build_volume_temperature;  //!< build volume temperature
     bool machine_heated_build_volume;  //!< does the machine have the ability to control/stabilize build-volume-temperature
+
+    bool is_traveling;
 protected:
     /*!
      * Convert an E value to a value in mm (if it wasn't already in mm) for the current extruder.

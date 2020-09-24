@@ -67,6 +67,7 @@ GCodeExport::GCodeExport()
 
     total_bounding_box = AABB3D();
 
+    is_traveling = 1;
 }
 
 GCodeExport::~GCodeExport()
@@ -228,7 +229,7 @@ std::string GCodeExport::getFileHeader(const std::vector<bool>& extruder_is_used
         prefix << ";END_OF_HEADER" << new_line;
         break;
     default:
-        prefix <<  ";F/W : 7.7.1.x" << new_line;
+        prefix << ";F/W : 7.7.1.x" << new_line;
         prefix << ";TIME:" << ((print_time)? static_cast<int>(*print_time) : 6666) << new_line;
 
         prefix << ";Filament used: ";
@@ -714,8 +715,11 @@ void GCodeExport::writeTravel(const coord_t& x, const coord_t& y, const coord_t&
     const std::string nozzle = extruder_settings.get<std::string>("machine_nozzle_id").c_str();    
     
     if (nozzle.substr(0,3).compare("Dis") == 0 || nozzle.substr(0,3).compare("Hot") == 0)
-        if (currentSpeed != speed)
+        if (currentSpeed != speed || is_traveling != 1)
+        {
             *output_stream << "M330 ;+" << new_line;
+            is_traveling = 1;
+        }
 
     *output_stream << "G0";
     writeFXYZE(speed, x, y, z, current_e_value, travel_move_type);
@@ -790,8 +794,11 @@ void GCodeExport::writeExtrusion(const int x, const int y, const int z, const Ve
     const std::string nozzle = extruder_settings.get<std::string>("machine_nozzle_id").c_str();    
     
     if (nozzle.substr(0,3).compare("FFF") != 0 && nozzle.substr(0,3).compare("Ext") != 0)
-        if (currentSpeed != speed)
+        if (currentSpeed != speed || is_traveling == 1)
+        {
             *output_stream << "M301 ;+" << new_line;
+            is_traveling = 0;
+        }
 
     *output_stream << "G1";
     writeFXYZE(speed, x, y, z, new_e_value, feature);
