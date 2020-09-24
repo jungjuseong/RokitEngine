@@ -573,9 +573,14 @@ void GCodeExport::writeExtrusionMode(bool set_relative_extrusion_mode)
 
 void GCodeExport::resetExtrusionValue()
 {
-    if (!relative_extrusion)
-    {
-        *output_stream << "G92 " << extruder_attr[current_extruder].extruderCharacter << "0" << new_line;
+    const Settings& extruder_settings = Application::getInstance().current_slice->scene.extruders[getExtruderNr()].settings;
+    const std::string nozzle = extruder_settings.get<std::string>("machine_nozzle_id").c_str();    
+    
+    if (nozzle.substr(0,3).compare("Ext") == 0 || nozzle.substr(0,3).compare("FFF") == 0) {
+        if (!relative_extrusion)
+        {
+            *output_stream << "G92 " << extruder_attr[current_extruder].extruderCharacter << "0" << new_line;
+        }
     }
     double current_extruded_volume = getCurrentExtrudedVolume();
     extruder_attr[current_extruder].totalFilament += current_extruded_volume;
@@ -783,8 +788,6 @@ void GCodeExport::writeExtrusion(const int x, const int y, const int z, const Ve
     
     const Settings& extruder_settings = Application::getInstance().current_slice->scene.extruders[getExtruderNr()].settings;
     const std::string nozzle = extruder_settings.get<std::string>("machine_nozzle_id").c_str();    
-
-    //*output_stream << ";Nozzle: " << nozzle.substr(0,3) << nozzle.substr(0,3).compare("FFF") << new_line;
     
     if (nozzle.substr(0,3).compare("FFF") != 0 && nozzle.substr(0,3).compare("Ext") != 0)
         if (currentSpeed != speed)
@@ -806,14 +809,12 @@ void GCodeExport::writeFXYZE(const Velocity& speed, const int x, const int y, co
     total_bounding_box.include(Point3(gcode_pos.X, gcode_pos.Y, z));
 
     *output_stream << " X" << MMtoStream{gcode_pos.X} << " Y" << MMtoStream{gcode_pos.Y};
-    if (currentPosition.z - z > 0)
+    if (currentPosition.z != z)
     {
-        if (getExtruderNr() == 0 && currentSpeed == speed)
+        if (current_extruder == 0)  
             *output_stream << new_line << "G0 Z" << MMtoStream{z};
         else
             *output_stream << new_line << "G0 C" << MMtoStream{z};
-
-        *output_stream << " ; (Height)";
     }
 
     const Settings& extruder_settings = Application::getInstance().current_slice->scene.extruders[current_extruder].settings;
@@ -824,7 +825,7 @@ void GCodeExport::writeFXYZE(const Velocity& speed, const int x, const int y, co
         const double output_e = (relative_extrusion)? e + current_e_offset - current_e_value : e + current_e_offset;
         if (nozzle.substr(0,3).compare("FFF") == 0 || nozzle.substr(0,3).compare("Ext") == 0) 
         {
-            *output_stream << "  E" << PrecisionedDouble{5, output_e};
+            *output_stream << " E" << PrecisionedDouble{5, output_e};
         }
     }
     *output_stream << new_line;

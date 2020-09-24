@@ -59,7 +59,7 @@ static inline void writeInt2mm(const int32_t coord, std::ostream& ss)
     }
     trailing_zeros--;
     end_pos = char_count - trailing_zeros;
-    if (trailing_zeros == 3)
+    if (trailing_zeros == 5)
     { // no need to write the decimal dot
         buffer[char_count - trailing_zeros] = '\0';
         ss << buffer;

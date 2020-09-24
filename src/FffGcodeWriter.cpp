@@ -73,7 +73,6 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage, TimeKeeper& time_keep
         {
             total_layers = std::max(total_layers, mesh.layers.size());
         }
-
         setInfillAndSkinAngles(mesh);
     }
 
@@ -81,12 +80,9 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage, TimeKeeper& time_keep
     
     gcode.writeLayerCountComment(total_layers);
 
-    if (gcode.getFlavor() == EGCodeFlavor::INVIVO4D6)
-    {
-        std::ostringstream tmp;
-        tmp << "D" << start_extruder_nr;
-        gcode.writeLine(tmp.str().c_str());
-    }
+    std::ostringstream tmp;
+    tmp << '\n' << "D" << start_extruder_nr;
+    gcode.writeLine(tmp.str().c_str());    
 
     { // calculate the mesh order for each extruder
         const size_t extruder_count = Application::getInstance().current_slice->scene.extruders.size();
@@ -121,7 +117,6 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage, TimeKeeper& time_keep
         }
     }
 
-
     const std::function<LayerPlan* (int)>& produce_item =
         [&storage, total_layers, this](int layer_nr)
         {
@@ -152,7 +147,6 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage, TimeKeeper& time_keep
 
     //Store the object height for when we are printing multiple objects, as we need to clear every one of them when moving to the next position.
     max_object_height = std::max(max_object_height, storage.model_max.z);
-
 
     constexpr bool force = true;
     gcode.writeRetraction(storage.retraction_config_per_extruder[gcode.getExtruderNr()], force); // retract after finishing each meshgroup
@@ -551,7 +545,7 @@ void FffGcodeWriter::processInitialLayerTemperature(const SliceDataStorage& stor
 
 void FffGcodeWriter::processStartingCode(const SliceDataStorage& storage, const size_t start_extruder_nr)
 {
-    gcode.writeComment("Generated with OrganRegerator_Engine " VERSION);
+    gcode.writeComment("Generated with OrganRegenerator_Engine " VERSION);
 
     std::vector<bool> extruder_is_used = storage.getExtrudersUsed();
     if (Application::getInstance().communication->isSequential()) //If we must output the g-code sequentially, we must already place the g-code header here even if we don't know the exact time/material usages yet.
