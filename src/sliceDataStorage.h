@@ -1,5 +1,5 @@
 //Copyright (c) 2018 Ultimaker B.V.
-//CuraEngine is released under the terms of the AGPLv3 or higher.
+//OrganRegenEngine is released under the terms of the AGPLv3 or higher.
 
 #ifndef SLICE_DATA_STORAGE_H
 #define SLICE_DATA_STORAGE_H

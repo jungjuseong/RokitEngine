@@ -1,6 +1,6 @@
 Generating Paths
 ====
-One of the stages of slicing is to fill the areas, that were previously designated to a certain feature type, with lines that build the actual object. This stage could be considered the most complex. It's where CuraEngine uses most of its tricks. The devil is in the details. This page will highlight some of the major techniques involved.
+One of the stages of slicing is to fill the areas, that were previously designated to a certain feature type, with lines that build the actual object. This stage could be considered the most complex. It's where OrganRegenEngine uses most of its tricks. The devil is in the details. This page will highlight some of the major techniques involved.
 
 Printing Order
 ----
@@ -8,7 +8,7 @@ The paths are generated in the same order in which they will be printed. This sa
 
 There is a precedence order for which things are considered more important to group together. This precedence goes as follows.
 
-1. Each mesh group is printed in the sequence that they are sent to CuraEngine. A mesh group is a group of meshes that will get printed from bottom to top. Normally, your entire scene will consist of one mesh group, but if slicing via the command line or if the "One at a Time" mode is enabled in the front-end, you could have multiple mesh groups. The optimal sequence is determined by the front-end in order to minimise the collision area of each mesh group due to the shape of the print head when the nozzle needs to move back down towards the build plate for each mesh group.
+1. Each mesh group is printed in the sequence that they are sent to OrganRegenEngine. A mesh group is a group of meshes that will get printed from bottom to top. Normally, your entire scene will consist of one mesh group, but if slicing via the command line or if the "One at a Time" mode is enabled in the front-end, you could have multiple mesh groups. The optimal sequence is determined by the front-end in order to minimise the collision area of each mesh group due to the shape of the print head when the nozzle needs to move back down towards the build plate for each mesh group.
 2. The layers are printed in sequence from bottom to top.
 3. Every extruder plan is printed in a certain order. The optimal order in which to print the extruders is determined beforehand in order to minimise the number of extruder switches. For example, if the printer has two extruders, then the first layer might start with the first extruder, then switch to the second extruder. The next layer must then start with the second extruder (so that there is no switch upon the layer transition) and switch to the first extruder. There will then be at most one extruder switch per layer.
 4. Every mesh is printed separately. The order is determined in order to minimise travel moves and switches in configuration.
@@ -44,7 +44,7 @@ Each wall is given a certain line width, depending on the line width settings. T
 
 Typically such gaps occur in very sharp corners. The nozzle is too fat to fit all the way into the corner without overextruding, so a gap will fall in the thinner part of the corner. Gaps can also occur in thin pieces where two walls are too close to each other to fill with another wall.
 
-When generating a wall, CuraEngine also checks for overlap with previously printed walls. This includes the wall right before it, where there could be considerable overlap. The part of the new wall that overlaps with the previous wall will get its line width reduced such that the new area of that part of the line is only the part that is not covered by the other line.
+When generating a wall, OrganRegenEngine also checks for overlap with previously printed walls. This includes the wall right before it, where there could be considerable overlap. The part of the new wall that overlaps with the previous wall will get its line width reduced such that the new area of that part of the line is only the part that is not covered by the other line.
 
 ![Overlap Compensated](assets/overlap_compensation.svg)
 
@@ -52,7 +52,7 @@ Instead of actually reducing the flow rate of this thinner line segment, the spe
 
 Infill Patterns
 ----
-Infill patterns are used not only for generating infill, but also for generating support, skin and even ironing. They are CuraEngine's go-to method to fill an area with material. Here the task is to draw lines inside a certain shape to fill that shape with the desired material density.
+Infill patterns are used not only for generating infill, but also for generating support, skin and even ironing. They are OrganRegenEngine's go-to method to fill an area with material. Here the task is to draw lines inside a certain shape to fill that shape with the desired material density.
 
 The most basic infill pattern is lines infill. Most infill patterns are based on lines. Triangular infill, for instance, is just lines infill but repeated three times at 60 degree angles from each other. Even octet infill is based on lines, repeated twice vertically and twice horizontally, and then shifted with a certain offset as to create tetrahedra and octets.
 
@@ -76,7 +76,7 @@ This wouldn't print well. For one, these lines are barely thick enough to extrud
 
 ![Adjacent Lines Joined Together](assets/gap_filled_joined.svg)
 
-The line widths of these lines are then adjusted in order to cover the same area as the original skin lines that they replaced. Just like when the line widths of walls were adjusted to compensate for overlapping walls, CuraEngine adjusts the print speed here too instead of actually extruding less or more while printing these lines. The printer typically has greater control over movement speed than over the flow of material exiting the nozzle. The result of adjusting these line widths looks a bit like the image below.
+The line widths of these lines are then adjusted in order to cover the same area as the original skin lines that they replaced. Just like when the line widths of walls were adjusted to compensate for overlapping walls, OrganRegenEngine adjusts the print speed here too instead of actually extruding less or more while printing these lines. The printer typically has greater control over movement speed than over the flow of material exiting the nozzle. The result of adjusting these line widths looks a bit like the image below.
 
 ![Line Width Adjusted](assets/gap_filled_compensated.svg)
 
@@ -84,23 +84,23 @@ The area covered by this adjusted line approximates the total area of the gap, s
 
 Optimal Line Order
 ----
-When a bunch of lines are printed together, the optimal order in which to print these lines is approximated. This is not used for all lines together, but only for a group of lines of the same feature and the same part, such as the skin lines within one part. Finding the perfect order is a special case of the [Travelling Salesman Problem](https://en.wikipedia.org/wiki/Travelling_salesman_problem) which is an NP-hard problem for which only exponential-time algorithms exist, which is infeasible to compute for CuraEngine within a desirable time span. The Nearest Neighbour approximation heuristic is made, which is only quadratic.
+When a bunch of lines are printed together, the optimal order in which to print these lines is approximated. This is not used for all lines together, but only for a group of lines of the same feature and the same part, such as the skin lines within one part. Finding the perfect order is a special case of the [Travelling Salesman Problem](https://en.wikipedia.org/wiki/Travelling_salesman_problem) which is an NP-hard problem for which only exponential-time algorithms exist, which is infeasible to compute for OrganRegenEngine within a desirable time span. The Nearest Neighbour approximation heuristic is made, which is only quadratic.
 
-For this approximation, after printing a line, CuraEngine looks for the nearest endpoint of a line that has not yet been printed. It travels there and prints that line. Then the nearest unprinted line is chosen again, and so on until all lines have been printed.
+For this approximation, after printing a line, OrganRegenEngine looks for the nearest endpoint of a line that has not yet been printed. It travels there and prints that line. Then the nearest unprinted line is chosen again, and so on until all lines have been printed.
 
 One slight adjustment needs to be made though because the nozzle cannot accelerate perfectly. Travel moves that move in a line parallel to the line that has just been printed are preferred. There is a weighting scheme to make this consideration based on the sine of the angle between the printed line and the line towards the destination. This reduces overal printing time due to acceleration limitations.
 
 Travelling
 ----
-When moving from A to B, CuraEngine needs to be careful not to make the fragile surface of your print ugly by hitting it with a hot, plastic-covered nozzle in the wrong spots. It employs a couple of techniques to minimise this.
+When moving from A to B, OrganRegenEngine needs to be careful not to make the fragile surface of your print ugly by hitting it with a hot, plastic-covered nozzle in the wrong spots. It employs a couple of techniques to minimise this.
 
 If a retraction is requested while the nozzle happens to be located on a wall, it needs to move inside the mesh a bit further first. Retracting causes the nozzle to pause for a while. During this time it is oozing material and melting any previously printed material it's touching. Inside the model this is less of an issue since it's not visible. The nozzle will move inside, retract there, then move to the infill of its destination part. Similarly, in the destination part it may also not directly go to its destination location if this lies too close to the outside of the print. It must travel to the inside of the mesh first, away from the walls, unretract there and then move to its final destination.
 
-The travel from one part to another will ooze some material even if the material is retracted. That's why CuraEngine will first find the place where the two parts are closest together and make the crossing there instead of at the place where it started. This technique is called combing. It minimises the amount of material that ends up as a blip on the outside of your print. The total travel time is longer, but the travel time outside of the model is shorter. The image below sketches an example of how such a travel would look.
+The travel from one part to another will ooze some material even if the material is retracted. That's why OrganRegenEngine will first find the place where the two parts are closest together and make the crossing there instead of at the place where it started. This technique is called combing. It minimises the amount of material that ends up as a blip on the outside of your print. The total travel time is longer, but the travel time outside of the model is shorter. The image below sketches an example of how such a travel would look.
 
 ![Travel Move with Combing](assets/travel_combing.svg)
 
-With any travel move CuraEngine needs to be careful not to cross any outside walls unnecessarily. It could avoid hitting these walls with a Z-hop, but the Z axis is typically slow and susceptible to wear. It could also move around these walls horizontally with collision avoidance. Making a choice between when to retract, perform combing and perform a Z hop is a complex affair that roughly follows the following flow chart:
+With any travel move OrganRegenEngine needs to be careful not to cross any outside walls unnecessarily. It could avoid hitting these walls with a Z-hop, but the Z axis is typically slow and susceptible to wear. It could also move around these walls horizontally with collision avoidance. Making a choice between when to retract, perform combing and perform a Z hop is a complex affair that roughly follows the following flow chart:
 
 ![Retraction, Z Hop and Combing choices](assets/retraction_combing_hop.svg)
 

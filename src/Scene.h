@@ -1,5 +1,5 @@
 //Copyright (c) 2018 Ultimaker B.V.
-//CuraEngine is released under the terms of the AGPLv3 or higher.
+//OrganRegenEngine is released under the terms of the AGPLv3 or higher.
 
 #ifndef SCENE_H
 #define SCENE_H
@@ -59,8 +59,8 @@ public:
     /*
      * \brief Gets a string that contains all settings.
      *
-     * This string mimics the command line call of CuraEngine. In theory you
-     * could call CuraEngine with this output in the command in order to
+     * This string mimics the command line call of OrganRegenEngine. In theory you
+     * could call OrganRegenEngine with this output in the command in order to
      * reproduce the output.
      */
     const std::string getAllSettingsString() const;

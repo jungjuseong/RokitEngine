@@ -3,7 +3,7 @@ set(CPACK_CMAKE_GENERATOR "Unix Makefiles")
 
 set(CPACK_PACKAGE_NAME "cura-curaengine-mingw-w64")
 set(CPACK_PACKAGE_VENDOR "Ultimaker B.V.")
-set(CPACK_PACKAGE_DESCRIPTION "(Cura) CuraEngine statically compiled for MinGW-w64 targeting Win64")
+set(CPACK_PACKAGE_DESCRIPTION "(Cura) OrganRegenEngine statically compiled for MinGW-w64 targeting Win64")
 set(CPACK_PACKAGE_CONTACT "Lipu Fei <l.fei@ultimaker.com>")
 set(CPACK_PACKAGING_INSTALL_PREFIX "/usr/x86_64-w64-mingw32")
 set(CPACK_PACKAGE_VERSION "4.5.0")

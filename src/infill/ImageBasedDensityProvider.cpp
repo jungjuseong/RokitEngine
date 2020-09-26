@@ -1,6 +1,6 @@
 //Copyright (c) 2017 Tim Kuipers
 //Copyright (c) 2018 Ultimaker B.V.
-//CuraEngine is released under the terms of the AGPLv3 or higher.
+//OrganRegenEngine is released under the terms of the AGPLv3 or higher.
 
 #define STBI_FAILURE_USERMSG // enable user friendly bug messages for STB lib
 #define STB_IMAGE_IMPLEMENTATION // needed in order to enable the implementation of libs/std_image.h

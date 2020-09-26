@@ -1,5 +1,5 @@
 //Copyright (C) 2019 Ultimaker B.V.
-//CuraEngine is released under the terms of the AGPLv3 or higher.
+//OrganRegenEngine is released under the terms of the AGPLv3 or higher.
 
 #include "Application.h"
 #include "ExtruderTrain.h"
@@ -9,6 +9,11 @@
 #include "support.h"
 #include "settings/types/Ratio.h"
 #include "utils/logoutput.h"
+
+#include "raft.h"
+#include "infill/SierpinskiFillProvider.h"
+#include "utils/math.h" //For PI.
+
 
 namespace cura 
 {
@@ -116,6 +121,7 @@ coord_t SkirtBrim::generatePrimarySkirtBrimLines(const coord_t start_distance, s
     return offset_distance;
 }
 
+
 void SkirtBrim::generate(SliceDataStorage& storage, Polygons first_layer_outline, const coord_t start_distance, size_t primary_line_count, const bool allow_helpers /*= true*/)
 {
     const bool is_skirt = start_distance > 0;
@@ -123,7 +129,7 @@ void SkirtBrim::generate(SliceDataStorage& storage, Polygons first_layer_outline
     const size_t adhesion_extruder_nr = scene.current_mesh_group->settings.get<ExtruderTrain&>("adhesion_extruder_nr").extruder_nr;
     const Settings& adhesion_settings = scene.extruders[adhesion_extruder_nr].settings;
     const coord_t primary_extruder_skirt_brim_line_width = adhesion_settings.get<coord_t>("skirt_brim_line_width") * adhesion_settings.get<Ratio>("initial_layer_line_width_factor");
-    const coord_t primary_extruder_minimal_length = adhesion_settings.get<coord_t>("skirt_brim_minimal_length");
+    coord_t primary_extruder_minimal_length = adhesion_settings.get<coord_t>("skirt_brim_minimal_length");
 
     Polygons& skirt_brim_primary_extruder = storage.skirt_brim[adhesion_extruder_nr];
 
@@ -208,7 +214,7 @@ void SkirtBrim::generate(SliceDataStorage& storage, Polygons first_layer_outline
     }
 
     if (first_layer_outline.polygonLength() > 0)
-    { // process other extruders' brim/skirt (as one brim line around the old brim)
+    {   // process other extruders' brim/skirt (as one brim line around the old brim)
         int last_width = primary_extruder_skirt_brim_line_width;
         std::vector<bool> extruder_is_used = storage.getExtrudersUsed();
         for (size_t extruder_nr = 0; extruder_nr < Application::getInstance().current_slice->scene.extruders.size(); extruder_nr++)
@@ -217,9 +223,21 @@ void SkirtBrim::generate(SliceDataStorage& storage, Polygons first_layer_outline
             {
                 continue;
             }
+
             const ExtruderTrain& train = Application::getInstance().current_slice->scene.extruders[extruder_nr];
             const coord_t width = train.settings.get<coord_t>("skirt_brim_line_width") * train.settings.get<Ratio>("initial_layer_line_width_factor");
-            const coord_t minimal_length = train.settings.get<coord_t>("skirt_brim_minimal_length");
+            coord_t minimal_length = train.settings.get<coord_t>("skirt_brim_minimal_length");
+
+            // INVIVO4D6
+            const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
+            EPlatformAdhesion adhesion_type = mesh_group_settings.get<EPlatformAdhesion>("adhesion_type");
+            if (adhesion_type == EPlatformAdhesion::SKIRT) {
+                //ExtruderTrain& adhesion_train = mesh_group_settings.get<ExtruderTrain&>("adhesion_extruder_nr");
+                const coord_t skirt_line_count = train.settings.get<size_t>("skirt_line_count"); 
+                if (skirt_line_count == 0)
+                    minimal_length = 0;
+            }
+
             offset_distance += last_width / 2 + width/2;
             last_width = width;
             while (storage.skirt_brim[extruder_nr].polygonLength() < minimal_length)
@@ -239,7 +257,8 @@ void SkirtBrim::generateSupportBrim(SliceDataStorage& storage, const bool merge_
     const ExtruderTrain& support_infill_extruder = scene.current_mesh_group->settings.get<ExtruderTrain&>("support_infill_extruder_nr");
     const coord_t brim_line_width = support_infill_extruder.settings.get<coord_t>("skirt_brim_line_width") * support_infill_extruder.settings.get<Ratio>("initial_layer_line_width_factor");
     size_t line_count = support_infill_extruder.settings.get<size_t>("support_brim_line_count");
-    const coord_t minimal_length = support_infill_extruder.settings.get<coord_t>("skirt_brim_minimal_length");
+    coord_t minimal_length = support_infill_extruder.settings.get<coord_t>("skirt_brim_minimal_length");
+    
     if (!storage.support.generated || line_count <= 0 || storage.support.supportLayers.empty())
     {
         return;

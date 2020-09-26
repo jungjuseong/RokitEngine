@@ -1,5 +1,5 @@
 //Copyright (C) 2019 Ultimaker B.V.
-//CuraEngine is released under the terms of the AGPLv3 or higher.
+//OrganRegenEngine is released under the terms of the AGPLv3 or higher.
 
 #include <iterator>
 #include <algorithm>

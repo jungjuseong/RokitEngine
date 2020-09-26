@@ -1,5 +1,5 @@
 //Copyright (c) 2018 Ultimaker B.V.
-//CuraEngine is released under the terms of the AGPLv3 or higher.
+//OrganRegenEngine is released under the terms of the AGPLv3 or higher.
 
 #ifndef UTILS_POLYGONS_POINT_INDEX_H
 #define UTILS_POLYGONS_POINT_INDEX_H

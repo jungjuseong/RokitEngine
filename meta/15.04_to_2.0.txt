@@ -37,7 +37,7 @@ moveSpeed           ==> speed_travel
 multiVolumeOverlap  ==> multiple_mesh_overlap
 nozzleSize          ==> machine_nozzle_size
 objectPosition      ==> mesh_position_x, mesh_position_y, mesh_position_z
-objectSink              [ Doesn't exist in CuraEngine anymore ]
+objectSink              [ Doesn't exist in OrganRegenEngine anymore ]
 perimeterBeforeInfill = not(infill_before_walls)
 postSwitchExtruderCode  ==> machine_extruder_start_code
 preSwitchExtruderCode   ==> machine_extruder_end_code

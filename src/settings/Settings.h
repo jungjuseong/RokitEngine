@@ -1,5 +1,5 @@
 //Copyright (c) 2018 Ultimaker B.V.
-//CuraEngine is released under the terms of the AGPLv3 or higher.
+//OrganRegenEngine is released under the terms of the AGPLv3 or higher.
 
 #ifndef SETTINGS_SETTINGS_H
 #define SETTINGS_SETTINGS_H
@@ -70,8 +70,8 @@ public:
      * \brief Get a string containing all settings in this container.
      *
      * The string is formatted in the same way as the command line arguments
-     * when slicing using CuraEngine from the command line. In theory you could
-     * put the output of this command in a call to CuraEngine.
+     * when slicing using OrganRegenEngine from the command line. In theory you could
+     * put the output of this command in a call to OrganRegenEngine.
      * \return A string containing all settings and their values.
      */
     const std::string getAllSettingsString() const;

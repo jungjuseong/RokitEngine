@@ -11,7 +11,7 @@ namespace cura
  * 
  * Each (non-leaf) node consists of a ProgressStageEstimator which consists of several stages.
  * 
- * The structure of this tree is an oversimplification of the call graph of CuraEngine.
+ * The structure of this tree is an oversimplification of the call graph of OrganRegenEngine.
  * 
  */
     

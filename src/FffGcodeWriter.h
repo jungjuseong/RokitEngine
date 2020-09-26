@@ -1,5 +1,5 @@
 //Copyright (c) 2018 Ultimaker B.V.
-//CuraEngine is released under the terms of the AGPLv3 or higher.
+//OrganRegenEngine is released under the terms of the AGPLv3 or higher.
 
 #ifndef GCODE_WRITER_H
 #define GCODE_WRITER_H
@@ -58,7 +58,7 @@ private:
     GCodeExport gcode;
 
     /*!
-     * The gcode file to write to when using CuraEngine as command line tool.
+     * The gcode file to write to when using OrganRegenEngine as command line tool.
      */
     std::ofstream output_file;
 
@@ -96,7 +96,7 @@ public:
     /*!
      * Set the target to write gcode to: to a file.
      * 
-     * Used when CuraEngine is used as command line tool.
+     * Used when OrganRegenEngine is used as command line tool.
      * 
      * \param filename The filename of the file to which to write the gcode.
      */
@@ -114,7 +114,7 @@ public:
     /*!
      * Set the target to write gcode to: an output stream.
      * 
-     * Used when CuraEngine is NOT used as command line tool.
+     * Used when OrganRegenEngine is NOT used as command line tool.
      * 
      * \param stream The stream to write gcode to.
      */
@@ -225,7 +225,7 @@ private:
     /*!
      * Set temperatures and perform initial priming.
      * 
-     * Write a stub header if CuraEngine is in command line tool mode. (Cause writing the header afterwards would entail moving all gcode down.)
+     * Write a stub header if OrganRegenEngine is in command line tool mode. (Cause writing the header afterwards would entail moving all gcode down.)
      * 
      * \param[in] storage where the slice data is stored.
      * \param[in] start_extruder_nr The extruder with which to start the print.

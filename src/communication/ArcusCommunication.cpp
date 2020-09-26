@@ -1,5 +1,5 @@
 //Copyright (c) 2018 Ultimaker B.V.
-//CuraEngine is released under the terms of the AGPLv3 or higher.
+//OrganRegenEngine is released under the terms of the AGPLv3 or higher.
 
 #ifdef ARCUS
 
@@ -28,7 +28,7 @@ namespace cura
  * \brief A computation class that formats layer view data in a way that the
  * front-end can understand it.
  *
- * This converts data from CuraEngine's internal data structures to Protobuf
+ * This converts data from OrganRegenEngine's internal data structures to Protobuf
  * messages that can be sent to the front-end.
  */
 class ArcusCommunication::PathCompiler
@@ -351,7 +351,7 @@ bool ArcusCommunication::hasSlice() const
 {
     return private_data->socket->getState() != Arcus::SocketState::Closed
         && private_data->socket->getState() != Arcus::SocketState::Error
-        && private_data->slice_count < 1; //Only slice once per run of CuraEngine. See documentation of slice_count.
+        && private_data->slice_count < 1; //Only slice once per run of OrganRegenEngine. See documentation of slice_count.
 }
 
 void ArcusCommunication::sendCurrentPosition(const Point& position)

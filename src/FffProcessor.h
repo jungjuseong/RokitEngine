@@ -1,5 +1,5 @@
 //Copyright (c) 2018 Ultimaker B.V.
-//CuraEngine is released under the terms of the AGPLv3 or higher.
+//OrganRegenEngine is released under the terms of the AGPLv3 or higher.
 
 #ifndef FFF_PROCESSOR_H
 #define FFF_PROCESSOR_H
@@ -51,7 +51,7 @@ public:
     /*!
      * Set the target to write gcode to: to a file.
      * 
-     * Used when CuraEngine is used as command line tool.
+     * Used when OrganRegenEngine is used as command line tool.
      * 
      * \param filename The filename of the file to which to write the gcode.
      */
@@ -63,7 +63,7 @@ public:
     /*!
      * Set the target to write gcode to: an output stream.
      * 
-     * Used when CuraEngine is NOT used as command line tool.
+     * Used when OrganRegenEngine is NOT used as command line tool.
      * 
      * \param stream The stream to write gcode to.
      */

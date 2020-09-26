@@ -1,5 +1,5 @@
 //Copyright (c) 2020 Ultimaker B.V.
-//CuraEngine is released under the terms of the AGPLv3 or higher.
+//OrganRegenEngine is released under the terms of the AGPLv3 or higher.
 
 #include <list>
 #include <limits> // numeric_limits
@@ -545,7 +545,7 @@ void FffGcodeWriter::processInitialLayerTemperature(const SliceDataStorage& stor
 
 void FffGcodeWriter::processStartingCode(const SliceDataStorage& storage, const size_t start_extruder_nr)
 {
-    gcode.writeComment("Generated with OrganRegenerator_Engine " VERSION);
+    gcode.writeComment("Generated with OrganRegen_Engine " VERSION);
 
     std::vector<bool> extruder_is_used = storage.getExtrudersUsed();
     if (Application::getInstance().communication->isSequential()) //If we must output the g-code sequentially, we must already place the g-code header here even if we don't know the exact time/material usages yet.

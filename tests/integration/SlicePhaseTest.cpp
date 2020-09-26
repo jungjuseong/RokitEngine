@@ -1,5 +1,5 @@
 //Copyright (c) 2019 Ultimaker B.V.
-//CuraEngine is released under the terms of the AGPLv3 or higher.
+//OrganRegenEngine is released under the terms of the AGPLv3 or higher.
 
 #include <gtest/gtest.h>
 
@@ -16,7 +16,7 @@ namespace cura
 class AdaptiveLayer;
 
 /*
- * Integration test on the slicing phase of CuraEngine. This tests if the
+ * Integration test on the slicing phase of OrganRegenEngine. This tests if the
  * slicing algorithm correctly splits a 3D model up into 2D layers.
  */
 class SlicePhaseTest : public testing::Test

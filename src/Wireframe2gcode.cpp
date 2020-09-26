@@ -1,5 +1,5 @@
 //Copyright (c) 2018 Ultimaker B.V.
-//CuraEngine is released under the terms of the AGPLv3 or higher.
+//OrganRegenEngine is released under the terms of the AGPLv3 or higher.
 
 #include <cmath> // sqrt
 #include <fstream> // debug IO
@@ -88,7 +88,7 @@ void Wireframe2gcode::writeGCode()
     Progress::messageProgressStage(Progress::Stage::EXPORT, nullptr);
     for (LayerIndex layer_nr = 0; layer_nr < static_cast<LayerIndex>(wireFrame.layers.size()); layer_nr++)
     {
-        Progress::messageProgress(Progress::Stage::EXPORT, layer_nr+1, total_layers); // abuse the progress system of the normal mode of CuraEngine
+        Progress::messageProgress(Progress::Stage::EXPORT, layer_nr+1, total_layers); // abuse the progress system of the normal mode of OrganRegenEngine
         
         WeaveLayer& layer = wireFrame.layers[layer_nr];
         

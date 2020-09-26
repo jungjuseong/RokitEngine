@@ -1,5 +1,5 @@
 //Copyright (c) 2018 Ultimaker B.V.
-//CuraEngine is released under the terms of the AGPLv3 or higher.
+//OrganRegenEngine is released under the terms of the AGPLv3 or higher.
 
 #ifndef LISTENER_H
 #define LISTENER_H
@@ -12,7 +12,7 @@ namespace cura
 
 /*
  * Extension of Arcus' ``SocketListener`` class to specialise the message
- * handling for CuraEngine.
+ * handling for OrganRegenEngine.
  */
 class Listener : public Arcus::SocketListener
 {

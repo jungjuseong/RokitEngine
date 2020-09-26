@@ -1,4 +1,4 @@
-main ICON "CuraEngine.ico"
+main ICON "OrganRegenEngine.ico"
 
 1 VERSIONINFO
 FILEVERSION     1,0,0,0
@@ -8,13 +8,13 @@ BEGIN
   BEGIN
     BLOCK "080904E4"
     BEGIN
-      VALUE "CompanyName", "Ultimaker BV."
+      VALUE "CompanyName", "Rokit Healthcare"
       VALUE "FileDescription", "Slicing engine for OrganRegenerator"
       VALUE "FileVersion", "1.0"
-      VALUE "InternalName", "CuraEngine"
+      VALUE "InternalName", "OrganRegenEngine"
       VALUE "LegalCopyright", "Ultimaker BV."
-      VALUE "OriginalFilename", "CuraEngine.exe"
-      VALUE "ProductName", "CuraEngine"
+      VALUE "OriginalFilename", "OrganRegenEngine.exe"
+      VALUE "ProductName", "OrganRegenEngine"
       VALUE "ProductVersion", "1.0"
     END
   END

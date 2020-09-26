@@ -1,5 +1,5 @@
 //Copyright (c) 2018 Ultimaker B.V.
-//CuraEngine is released under the terms of the AGPLv3 or higher.
+//OrganRegenEngine is released under the terms of the AGPLv3 or higher.
 
 #ifndef APPLICATION_H
 #define APPLICATION_H
@@ -51,7 +51,7 @@ public:
     void printCall() const;
 
     /*!
-     * \brief Print to the stderr channel how to use CuraEngine.
+     * \brief Print to the stderr channel how to use OrganRegenEngine.
      */
     void printHelp() const;
 

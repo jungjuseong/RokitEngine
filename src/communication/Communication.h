@@ -1,5 +1,5 @@
 //Copyright (c) 2018 Ultimaker B.V.
-//CuraEngine is released under the terms of the AGPLv3 or higher.
+//OrganRegenEngine is released under the terms of the AGPLv3 or higher.
 
 #ifndef COMMUNICATION_H
 #define COMMUNICATION_H
@@ -18,7 +18,7 @@ class ExtruderTrain;
 
 /*
  * An abstract class to provide a common interface for all methods of
- * communicating instructions from and to CuraEngine.
+ * communicating instructions from and to OrganRegenEngine.
  */
 class Communication
 {

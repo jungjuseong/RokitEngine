@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 ## runtest.py
-# The runtest.py script runs regression tests on the CuraEngine.
+# The runtest.py script runs regression tests on the OrganRegenEngine.
 # It parses the json file for settings to know which settings can be passed towards the engine.
 # It runs the following test:
 # * Defaults
@@ -394,7 +394,7 @@ def main(engine, model_path):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="CuraEngine testing script")
+    parser = argparse.ArgumentParser(description="OrganRegenEngine testing script")
     parser.add_argument("--simple", action="store_true", help="Only run the single test, exit")
     parser.add_argument("json", type=str, help="Machine JSON file to use")
     parser.add_argument("engine", type=str, help="Engine executable")

@@ -1,5 +1,5 @@
 //Copyright (c) 2019 Ultimaker B.V.
-//CuraEngine is released under the terms of the AGPLv3 or higher.
+//OrganRegenEngine is released under the terms of the AGPLv3 or higher.
 
 #include <cmath> // sqrt
 #include <fstream> // debug IO
@@ -88,7 +88,7 @@ void Weaver::weave(MeshGroup* meshgroup)
         Progress::messageProgressStage(Progress::Stage::INSET_SKIN, nullptr);
         for (LayerIndex layer_idx = starting_layer_idx + 1; layer_idx < LayerIndex(layer_count); layer_idx++)
         {
-            Progress::messageProgress(Progress::Stage::INSET_SKIN, layer_idx+1, layer_count); // abuse the progress system of the normal mode of CuraEngine
+            Progress::messageProgress(Progress::Stage::INSET_SKIN, layer_idx+1, layer_count); // abuse the progress system of the normal mode of OrganRegenEngine
             
             Polygons parts1;
             for (cura::Slicer* slicer : slicerList)
@@ -122,7 +122,7 @@ void Weaver::weave(MeshGroup* meshgroup)
         Progress::messageProgressStage(Progress::Stage::SUPPORT, nullptr);
         for (unsigned int layer_idx = 0; layer_idx < wireFrame.layers.size(); layer_idx++)
         {
-            Progress::messageProgress(Progress::Stage::SUPPORT, layer_idx+1, wireFrame.layers.size()); // abuse the progress system of the normal mode of CuraEngine
+            Progress::messageProgress(Progress::Stage::SUPPORT, layer_idx+1, wireFrame.layers.size()); // abuse the progress system of the normal mode of OrganRegenEngine
             
             WeaveLayer& layer = wireFrame.layers[layer_idx];
             
