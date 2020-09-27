@@ -229,13 +229,13 @@ void SkirtBrim::generate(SliceDataStorage& storage, Polygons first_layer_outline
             coord_t minimal_length = train.settings.get<coord_t>("skirt_brim_minimal_length");
 
             // INVIVO4D6
-            const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
-            EPlatformAdhesion adhesion_type = mesh_group_settings.get<EPlatformAdhesion>("adhesion_type");
-            if (adhesion_type == EPlatformAdhesion::SKIRT) {
+            //const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
+            EPlatformAdhesion adhesion_type = train.settings.get<EPlatformAdhesion>("adhesion_type");
+
+            const coord_t skirt_line_count = train.settings.get<size_t>("skirt_line_count"); 
+            if (adhesion_type == EPlatformAdhesion::NONE || (adhesion_type == EPlatformAdhesion::SKIRT && skirt_line_count == 0)) {
                 //ExtruderTrain& adhesion_train = mesh_group_settings.get<ExtruderTrain&>("adhesion_extruder_nr");
-                const coord_t skirt_line_count = train.settings.get<size_t>("skirt_line_count"); 
-                if (skirt_line_count == 0)
-                    minimal_length = 0;
+                minimal_length = 0;
             }
 
             offset_distance += last_width / 2 + width/2;
