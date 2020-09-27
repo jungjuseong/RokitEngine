@@ -81,7 +81,38 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage, TimeKeeper& time_keep
     gcode.writeLayerCountComment(total_layers);
 
     std::ostringstream tmp;
-    tmp << '\n' << "D" << start_extruder_nr;
+    //tmp << '\n' << "D" << start_extruder_nr;
+
+    const Settings& settings = Application::getInstance().current_slice->scene.extruders[start_extruder_nr].settings;
+    const std::string start_nozzle = settings.get<std::string>("machine_nozzle_id");    
+
+    tmp << ";TOOL_SETUP: " << start_nozzle.c_str() << '\n';
+
+    if (start_extruder_nr == 0)
+        tmp << "D6" << '\n';
+    else
+        tmp << "D" << start_extruder_nr << '\n';
+
+    // INVIVO
+    const int A_Axis[6] = {0, 0, -72,  72, 144, -144};
+    const char *LeftPos = "G54 G0 X0.0 Y0.0 ;(HOTMELT/EXTRUDER)";
+    const char *RightPos = "G55 G0 X0.0 Y0.0 ;(ROTARY)";
+    
+    if (start_extruder_nr > 0) 
+    {
+        tmp << "G0 A" << A_Axis[start_extruder_nr] << " F600" << '\n';
+        tmp << RightPos << '\n';
+        tmp << "G0 B15.0 F300" << '\n';
+    }
+    else 
+    {
+        tmp << LeftPos << '\n';
+        if (start_nozzle.substr(0,3).compare("FFF") == 0 || start_nozzle.substr(0,3).compare("Ext") == 0) {
+            tmp << "M301" << '\n';
+        }
+    }
+    tmp << ";END" << '\n';
+
     gcode.writeLine(tmp.str().c_str());    
 
     { // calculate the mesh order for each extruder

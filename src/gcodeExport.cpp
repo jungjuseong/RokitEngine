@@ -988,7 +988,51 @@ void GCodeExport::startExtruder(const size_t new_extruder)
     extruder_attr[new_extruder].is_used = true;
     if (new_extruder != current_extruder) // wouldn't be the case on the very first extruder start if it's extruder 0
     {
-        *output_stream << "D" << new_extruder << new_line;
+        const Settings& currentSettings = Application::getInstance().current_slice->scene.extruders[current_extruder].settings;
+        const std::string current_nozzle = currentSettings.get<std::string>("machine_nozzle_id"); 
+
+        const Settings& newSettings = Application::getInstance().current_slice->scene.extruders[new_extruder].settings;
+        const std::string new_nozzle = newSettings.get<std::string>("machine_nozzle_id");    
+
+        // INVIVO
+        const int A_Axis[6] = {0, 0, -72,  72, 144, -144};
+        const char *LeftPos = "G54 G0 X0.0 Y0.0 ;(HOTMELT/EXTRUDER) ;+";
+        const char *RightPos = "G55 G0 X0.0 Y0.0 ;(ROTARY) ;+";
+
+        *output_stream << ";TOOL_END:" << current_nozzle.c_str() << " - " << current_extruder << new_line;
+        *output_stream << "G0 Z40 C30 F420 ;+" << new_line;
+        *output_stream << "M29 B ;+"<< new_line;
+        if (new_extruder > 0)
+        {
+            *output_stream << RightPos << new_line;
+        }
+        else 
+        {
+            *output_stream << LeftPos << new_line;
+            if (current_nozzle.substr(0,3).compare("FFF") == 0 || new_nozzle.substr(0,3).compare("Ext") == 0) {
+                    *output_stream << "M330" << new_line;
+            }
+        }
+        *output_stream << ";END" << new_line;
+
+        if (new_extruder == 0)
+            *output_stream << "D6" << new_line;
+        else
+            *output_stream << "D" << new_extruder << new_line;
+
+        *output_stream << ";TOOL_START:" << new_nozzle.c_str() << " - " << new_extruder << new_line;
+        if (new_extruder > 0) 
+        {
+            *output_stream << "G0 A" << A_Axis[new_extruder] << "F600" << new_line;
+            *output_stream << "G0 B15.0 F300" << new_line;
+        }
+        else 
+        {
+            if (new_nozzle.substr(0,3).compare("FFF") == 0 || new_nozzle.substr(0,3).compare("Ext") == 0) {
+                *output_stream << "M301" << new_line;
+            }
+        }
+        *output_stream << ";END" << new_line;
     }
 
     current_extruder = new_extruder;
