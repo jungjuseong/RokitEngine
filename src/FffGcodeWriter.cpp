@@ -80,11 +80,24 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage, TimeKeeper& time_keep
     
     gcode.writeLayerCountComment(total_layers);
 
-    std::ostringstream tmp;
-    //tmp << '\n' << "D" << start_extruder_nr;
+    const Settings& scene_settings = Application::getInstance().current_slice->scene.settings;
+    const std::string dish_type = scene_settings.get<std::string>("machine_build_dish_type");
 
-    const Settings& settings = Application::getInstance().current_slice->scene.extruders[start_extruder_nr].settings;
-    const std::string start_nozzle = settings.get<std::string>("machine_nozzle_id");    
+    const Settings& extruder_settings = Application::getInstance().current_slice->scene.extruders[start_extruder_nr].settings;
+    const std::string start_nozzle = extruder_settings.get<std::string>("machine_nozzle_id");    
+
+    std::ostringstream tmp;
+    tmp << '\n';
+
+    if (dish_type.substr(0,4).compare("Well") == 0) {
+        tmp << ";HOP_SPACING -(" << dish_type << ") Well No: 0" << '\n';
+        tmp << "G0 C30.0" << '\n';
+        tmp << "G0 X0.000 Y0.000" << '\n';
+        tmp << "G92 X0.0 Y0.0" << '\n';
+        tmp << ";END" << '\n';
+    }
+
+    tmp << '\n' << ";BODY_START" << '\n';
 
     tmp << ";TOOL_SETUP: " << start_nozzle.c_str() << '\n';
 
@@ -111,7 +124,7 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage, TimeKeeper& time_keep
             tmp << "M301" << '\n';
         }
     }
-    tmp << ";END" << '\n';
+    tmp << ";END";
 
     gcode.writeLine(tmp.str().c_str());    
 
