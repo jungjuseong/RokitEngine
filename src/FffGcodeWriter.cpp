@@ -2,6 +2,8 @@
 //OrganRegenEngine is released under the terms of the AGPLv3 or higher.
 
 #include <list>
+#include <array>
+#include <map>
 #include <limits> // numeric_limits
 
 #include "Application.h"
@@ -89,11 +91,36 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage, TimeKeeper& time_keep
     std::ostringstream tmp;
     tmp << '\n';
 
-    if (dish_type.substr(0,4).compare("Well") == 0) {
-        tmp << ";HOP_SPACING -(" << dish_type << ") Well No: 0" << '\n';
-        tmp << "G0 C30.0" << '\n';
-        tmp << "G0 X0.000 Y0.000" << '\n';
-        tmp << "G92 X0.0 Y0.0" << '\n';
+    struct StartPoint
+    {
+        std::string x;
+        std::string y;
+    };
+    
+    const std::map<std::string, StartPoint> start_points = {
+        {"6", {"-19.50","39.00"}}, 
+        {"12", {"-26.00","39.0"}},
+        {"24", {"-28.95","48.25"}},
+        {"48", {"-32.25","45.15"}},
+        {"96", {"-31.50","49.50"}}
+    };
+
+    const std::array<std::string,6> a_axis = {"0.00", "0.00", "-72.00", "72.00", "144.00", "-144.00"};
+
+    if (dish_type.substr(0,10).compare("Well Plate") == 0) {
+
+        std::string well = dish_type.substr(11);
+
+        tmp << ";Start point" << '\n';
+        tmp << ";HOP_SPACING - "<< "Well No: 0 of " << well << '\n';
+        tmp << "G55 X0.00 Y0.00" << '\n';
+        tmp << "G90 G0 " << "X" << start_points.at(well).x << " Y" << start_points.at(well).y << '\n';
+        tmp << "G0 A" << a_axis[start_extruder_nr] << " F600" << '\n';
+        tmp << "G0 B15.00 F300" << '\n';
+        tmp << "G90 G0 C-30.00" << '\n';
+        tmp << "G92 C0.00" << '\n';
+        tmp << "G92 X0.00 Y0.00" << '\n';
+
         tmp << ";END" << '\n';
     }
 
