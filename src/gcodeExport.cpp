@@ -717,7 +717,7 @@ void GCodeExport::writeTravel(const coord_t& x, const coord_t& y, const coord_t&
     if (nozzle.substr(0,3).compare("Dis") == 0 || nozzle.substr(0,3).compare("Hot") == 0)
         if (currentSpeed != speed || is_traveling != 1)
         {
-            *output_stream << "M330 ;+" << new_line;
+            *output_stream << "M330" << new_line;
             is_traveling = 1;
         }
 
@@ -796,7 +796,7 @@ void GCodeExport::writeExtrusion(const int x, const int y, const int z, const Ve
     if (nozzle.substr(0,3).compare("FFF") != 0 && nozzle.substr(0,3).compare("Ext") != 0)
         if (currentSpeed != speed || is_traveling == 1)
         {
-            *output_stream << "M301 ;+" << new_line;
+            *output_stream << "M301" << new_line;
             is_traveling = 0;
         }
 
