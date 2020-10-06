@@ -99,7 +99,7 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage, TimeKeeper& time_keep
     
     const std::map<std::string, StartPoint> start_points = {
         {"6", {"-19.50","39.00"}}, 
-        {"12", {"-26.00","39.0"}},
+        {"12", {"-26.00","39.00"}},
         {"24", {"-28.95","48.25"}},
         {"48", {"-32.25","45.15"}},
         {"96", {"-31.50","49.50"}}
@@ -124,7 +124,7 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage, TimeKeeper& time_keep
         tmp << ";END" << '\n';
     }
 
-    tmp << '\n' << ";BODY_START" << '\n';
+    tmp << ";BODY_START" << '\n';
 
     tmp << ";TOOL_SETUP: " << start_nozzle.c_str() << '\n';
 
@@ -142,7 +142,6 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage, TimeKeeper& time_keep
     {
         tmp << "G0 A" << A_Axis[start_extruder_nr] << " F600" << '\n';
         tmp << RightPos << '\n';
-        tmp << "G0 B15.0 F300" << '\n';
     }
     else 
     {

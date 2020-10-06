@@ -715,10 +715,13 @@ void GCodeExport::writeTravel(const coord_t& x, const coord_t& y, const coord_t&
     const std::string nozzle = extruder_settings.get<std::string>("machine_nozzle_id").c_str();    
     
     if (nozzle.substr(0,3).compare("Dis") == 0 || nozzle.substr(0,3).compare("Hot") == 0)
-        if (currentSpeed != speed || is_traveling != 1)
+        if (currentSpeed != speed) 
         {
-            *output_stream << "M330" << new_line;
-            is_traveling = 1;
+            if (is_traveling == 0)
+            {
+                *output_stream << "M330" << new_line;
+                is_traveling = 1;
+            }
         }
 
     *output_stream << "G0";
@@ -794,12 +797,13 @@ void GCodeExport::writeExtrusion(const int x, const int y, const int z, const Ve
     const std::string nozzle = extruder_settings.get<std::string>("machine_nozzle_id").c_str();    
     
     if (nozzle.substr(0,3).compare("FFF") != 0 && nozzle.substr(0,3).compare("Ext") != 0)
+    {
         if (currentSpeed != speed || is_traveling == 1)
         {
             *output_stream << "M301" << new_line;
             is_traveling = 0;
         }
-
+    }
     *output_stream << "G1";
     writeFXYZE(speed, x, y, z, new_e_value, feature);
 }
@@ -857,11 +861,14 @@ void GCodeExport::writeUnretractionAndPrime()
     {
         current_e_value += extruder_attr[current_extruder].retraction_e_amount_current;
         const double output_e = (relative_extrusion)? extruder_attr[current_extruder].retraction_e_amount_current + prime_volume_e : current_e_value;
-        if (nozzle.substr(0,3).compare("FFF") == 0 || nozzle.substr(0,3).compare("Ext") == 0) {        
+        if (nozzle.substr(0,3).compare("FFF") == 0 || nozzle.substr(0,3).compare("Ext") == 0) 
+        {        
             *output_stream << "G1 F" << PrecisionedDouble{1, last_retraction_prime_speed} << " E" << PrecisionedDouble{5, output_e};
         }
-        else {
+        else 
+        {
             *output_stream << "M330";
+            is_traveling = 1;
         }
          *output_stream << " ;(Back-Retraction)" << new_line;
         
@@ -938,6 +945,7 @@ void GCodeExport::writeRetraction(const RetractionConfig& config, bool force, bo
     else
     {
         *output_stream << "M301";
+        is_traveling = 0;
     }
     *output_stream << " ;(Retraction)" << new_line;
 
@@ -994,23 +1002,33 @@ void GCodeExport::startExtruder(const size_t new_extruder)
         const Settings& newSettings = Application::getInstance().current_slice->scene.extruders[new_extruder].settings;
         const std::string new_nozzle = newSettings.get<std::string>("machine_nozzle_id");    
 
+        if (is_traveling == 0)
+        {
+            *output_stream << "M330" << " ; AirOff" << new_line;
+            is_traveling = 1;
+        }
         // INVIVO
         const int A_Axis[6] = {0, 0, -72,  72, 144, -144};
-        const char *LeftPos = "G54 G0 X0.0 Y0.0 ;(HOTMELT/EXTRUDER) ;+";
-        const char *RightPos = "G55 G0 X0.0 Y0.0 ;(ROTARY) ;+";
+        const char *LeftPos = "G54 G0 X0.0 Y0.0 ;(HOTMELT/EXTRUDER)";
+        const char *RightPos = "G55 G0 X0.0 Y0.0 ;(ROTARY)";
 
-        *output_stream << ";TOOL_END:" << current_nozzle.c_str() << " - " << current_extruder << new_line;
-        *output_stream << "G0 Z40 C30 F420 ;+" << new_line;
-        *output_stream << "M29 B ;+"<< new_line;
+        *output_stream << ";TOOL_END" << new_line;
+        *output_stream << "G0 Z40 C30 F420" << new_line;
+        *output_stream << "M29 B"<< new_line;
         if (new_extruder > 0)
         {
             *output_stream << RightPos << new_line;
+            *output_stream << "G0 B15.0 F300" << new_line;
         }
         else 
         {
             *output_stream << LeftPos << new_line;
             if (current_nozzle.substr(0,3).compare("FFF") == 0 || new_nozzle.substr(0,3).compare("Ext") == 0) {
+                if (is_traveling == 0) 
+                {
                     *output_stream << "M330" << new_line;
+                    is_traveling = 1;
+                }
             }
         }
         *output_stream << ";END" << new_line;
@@ -1023,13 +1041,14 @@ void GCodeExport::startExtruder(const size_t new_extruder)
         *output_stream << ";TOOL_START:" << new_nozzle.c_str() << " - " << new_extruder << new_line;
         if (new_extruder > 0) 
         {
-            *output_stream << "G0 A" << A_Axis[new_extruder] << "F600" << new_line;
+            *output_stream << "G0 A" << A_Axis[new_extruder] << " F600" << new_line;
             *output_stream << "G0 B15.0 F300" << new_line;
         }
         else 
         {
             if (new_nozzle.substr(0,3).compare("FFF") == 0 || new_nozzle.substr(0,3).compare("Ext") == 0) {
                 *output_stream << "M301" << new_line;
+                is_traveling = 0;
             }
         }
         *output_stream << ";END" << new_line;
