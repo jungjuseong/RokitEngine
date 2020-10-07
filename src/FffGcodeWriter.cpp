@@ -82,77 +82,37 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage, TimeKeeper& time_keep
     
     gcode.writeLayerCountComment(total_layers);
 
-    const Settings& scene_settings = Application::getInstance().current_slice->scene.settings;
-    const std::string dish_type = scene_settings.get<std::string>("machine_build_dish_type");
-
     const Settings& extruder_settings = Application::getInstance().current_slice->scene.extruders[start_extruder_nr].settings;
     const std::string start_nozzle = extruder_settings.get<std::string>("machine_nozzle_id");    
 
-    std::ostringstream tmp;
-    tmp << '\n';
+    //std::ostringstream tmp;
+    //tmp << '\n';
 
-    struct StartPoint
-    {
-        std::string x;
-        std::string y;
-    };
-    
-    const std::map<std::string, StartPoint> start_points = {
-        {"6", {"-19.50","39.00"}}, 
-        {"12", {"-26.00","39.00"}},
-        {"24", {"-28.95","48.25"}},
-        {"48", {"-32.25","45.15"}},
-        {"96", {"-31.50","49.50"}}
-    };
+    // tmp << ";TOOL_SETUP: " << start_nozzle.c_str() << '\n';
 
-    const std::array<std::string,6> a_axis = {"0.00", "0.00", "-72.00", "72.00", "144.00", "-144.00"};
-
-    if (dish_type.substr(0,10).compare("Well Plate") == 0) {
-
-        std::string well = dish_type.substr(11);
-
-        tmp << ";Start point" << '\n';
-        tmp << ";HOP_SPACING - "<< "Well No: 0 of " << well << '\n';
-        tmp << "G55 X0.00 Y0.00" << '\n';
-        tmp << "G90 G0 " << "X" << start_points.at(well).x << " Y" << start_points.at(well).y << '\n';
-        tmp << "G0 A" << a_axis[start_extruder_nr] << " F600" << '\n';
-        tmp << "G0 B15.00 F300" << '\n';
-        tmp << "G90 G0 C-30.00" << '\n';
-        tmp << "G92 C0.00" << '\n';
-        tmp << "G92 X0.00 Y0.00" << '\n';
-
-        tmp << ";END" << '\n';
-    }
-
-    tmp << ";BODY_START" << '\n';
-
-    tmp << ";TOOL_SETUP: " << start_nozzle.c_str() << '\n';
-
-    if (start_extruder_nr == 0)
-        tmp << "D6" << '\n';
-    else
-        tmp << "D" << start_extruder_nr << '\n';
+    // if (start_extruder_nr == 0)
+    //     tmp << "D6" << '\n';
+    // else
+    //     tmp << "D" << start_extruder_nr << '\n';
 
     // INVIVO
-    const int A_Axis[6] = {0, 0, -72,  72, 144, -144};
-    const char *LeftPos = "G54 G0 X0.0 Y0.0 ;(HOTMELT/EXTRUDER)";
-    const char *RightPos = "G55 G0 X0.0 Y0.0 ;(ROTARY)";
+    // const int A_Axis[6] = {0, 0, -72,  72, 144, -144};
     
-    if (start_extruder_nr > 0) 
-    {
-        tmp << "G0 A" << A_Axis[start_extruder_nr] << " F600" << '\n';
-        tmp << RightPos << '\n';
-    }
-    else 
-    {
-        tmp << LeftPos << '\n';
-        if (start_nozzle.substr(0,3).compare("FFF") == 0 || start_nozzle.substr(0,3).compare("Ext") == 0) {
-            tmp << "M301" << '\n';
-        }
-    }
-    tmp << ";END";
+    // if (start_extruder_nr > 0) 
+    // {
+    //     tmp << "G0 A" << A_Axis[start_extruder_nr] << " F600" << '\n';
+    //     tmp << RightPos << '\n';
+    // }
+    // else 
+    // {
+    //     tmp << LeftPos << '\n';
+    //     if (start_nozzle.substr(0,3).compare("FFF") == 0 || start_nozzle.substr(0,3).compare("Ext") == 0) {
+    //         tmp << "M301" << '\n';
+    //     }
+    // }
+    // tmp << ";END";
 
-    gcode.writeLine(tmp.str().c_str());    
+    //gcode.writeLine(tmp.str().c_str());    
 
     { // calculate the mesh order for each extruder
         const size_t extruder_count = Application::getInstance().current_slice->scene.extruders.size();
@@ -615,9 +575,12 @@ void FffGcodeWriter::processInitialLayerTemperature(const SliceDataStorage& stor
 
 void FffGcodeWriter::processStartingCode(const SliceDataStorage& storage, const size_t start_extruder_nr)
 {
-    gcode.writeComment("Generated with OrganRegen_Engine " VERSION);
+    gcode.writeComment("Generated with OrganRegen_Engine " VERSION );
 
     std::vector<bool> extruder_is_used = storage.getExtrudersUsed();
+
+    gcode.writeExtrudersUsed(extruder_is_used);
+
     if (Application::getInstance().communication->isSequential()) //If we must output the g-code sequentially, we must already place the g-code header here even if we don't know the exact time/material usages yet.
     {
         std::string prefix = gcode.getFileHeader(extruder_is_used);
@@ -636,7 +599,7 @@ void FffGcodeWriter::processStartingCode(const SliceDataStorage& storage, const 
     }
 
     Application::getInstance().communication->sendCurrentPosition(gcode.getPositionXY());
-    gcode.startExtruder(start_extruder_nr);
+    //gcode.startExtruder(start_extruder_nr, false);
 
     if (mesh_group_settings.get<bool>("relative_extrusion"))
     {

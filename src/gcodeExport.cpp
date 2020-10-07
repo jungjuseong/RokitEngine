@@ -68,6 +68,7 @@ GCodeExport::GCodeExport()
     total_bounding_box = AABB3D();
 
     is_traveling = 1;
+    has_first_extruder_setting = false;
 }
 
 GCodeExport::~GCodeExport()
@@ -477,6 +478,16 @@ void GCodeExport::updateTotalPrintTime()
     }
     estimateCalculator.reset();
     writeTimeComment(getSumTotalPrintTimes());
+}
+
+void GCodeExport::writeExtrudersUsed(const std::vector<bool> extruder_is_used)
+{
+    *output_stream << ";EXTRUDER_USED:";
+    for(size_t i = 0; i < extruder_is_used.size(); i++)
+    {
+        *output_stream << " " << extruder_is_used[i];
+    }
+    *output_stream << new_line;
 }
 
 void GCodeExport::writeComment(const std::string& unsanitized_comment)
@@ -991,56 +1002,66 @@ void GCodeExport::writeZhopEnd(Velocity speed/*= 0*/)
     }
 }
 
-void GCodeExport::startExtruder(const size_t new_extruder)
+void GCodeExport::startExtruder(const size_t new_extruder, const bool from_mesh)
 {
     extruder_attr[new_extruder].is_used = true;
-    if (new_extruder != current_extruder) // wouldn't be the case on the very first extruder start if it's extruder 0
+
+    const Settings& currentSettings = Application::getInstance().current_slice->scene.extruders[current_extruder].settings;
+    const std::string current_nozzle = currentSettings.get<std::string>("machine_nozzle_id"); 
+
+    const Settings& newSettings = Application::getInstance().current_slice->scene.extruders[new_extruder].settings;
+    const std::string new_nozzle = newSettings.get<std::string>("machine_nozzle_id");    
+
+    const Settings& scene_settings = Application::getInstance().current_slice->scene.settings;
+    const std::string dish_type = scene_settings.get<std::string>("machine_build_dish_type");
+
+    const std::string LEFT_BED = "G54 G0 X0.0 Y0.0 ;(HOTMELT/EXTRUDER)";
+    const std::string RIGHT_BED = "G55 G0 X0.0 Y0.0 ;(ROTARY)";
+    const char *A_AXIS_POS[6] = {"0.00", "0.00", "-72.00", "72.00", "144.00", "-144.00"};
+
+    struct StartPoint { 
+        std::string x;
+        std::string y;
+    };
+    const std::map<std::string, StartPoint> HOP_TO = {
+        {"6", {"-19.50","39.00"}}, 
+        {"12", {"-26.00","39.00"}},
+        {"24", {"-28.95","48.25"}},
+        {"48", {"-32.25","45.15"}},
+        {"96", {"-31.50","49.50"}}
+    };
+
+    if (from_mesh && has_first_extruder_setting == false) 
     {
-        const Settings& currentSettings = Application::getInstance().current_slice->scene.extruders[current_extruder].settings;
-        const std::string current_nozzle = currentSettings.get<std::string>("machine_nozzle_id"); 
 
-        const Settings& newSettings = Application::getInstance().current_slice->scene.extruders[new_extruder].settings;
-        const std::string new_nozzle = newSettings.get<std::string>("machine_nozzle_id");    
+        if (dish_type.substr(0,10).compare("Well Plate") == 0) {
 
-        if (is_traveling == 0)
-        {
-            *output_stream << "M330" << " ; AirOff" << new_line;
-            is_traveling = 1;
+            std::string well = dish_type.substr(11);
+
+            *output_stream << ";HOPPING - "<< "Well No: 0 of " << well << '\n';
+            *output_stream << (new_extruder > 0 ? RIGHT_BED : LEFT_BED) << '\n';
+            *output_stream << "G90 G0 " << "X" << HOP_TO.at(well).x << " Y" << HOP_TO.at(well).y << '\n';
+            *output_stream << "G0 A" << A_AXIS_POS[new_extruder] << " F600" << '\n';
+            *output_stream << "G0 B15.00 F300" << '\n';
+            *output_stream << "G90 G0 C-30.00" << '\n';
+            *output_stream << "G92 C0.00" << '\n';
+            *output_stream << "G92 X0.00 Y0.00" << '\n';
+            *output_stream << ";END" << '\n';
         }
-        // INVIVO
-        const int A_Axis[6] = {0, 0, -72,  72, 144, -144};
-        const char *LeftPos = "G54 G0 X0.0 Y0.0 ;(HOTMELT/EXTRUDER)";
-        const char *RightPos = "G55 G0 X0.0 Y0.0 ;(ROTARY)";
 
-        *output_stream << ";TOOL_END" << new_line;
-        *output_stream << "G0 Z40 C30 F420" << new_line;
-        *output_stream << "M29 B"<< new_line;
-        if (new_extruder > 0)
-        {
-            *output_stream << RightPos << new_line;
-        }
-        else 
-        {
-            *output_stream << LeftPos << new_line;
-            if (current_nozzle.substr(0,3).compare("FFF") == 0 || new_nozzle.substr(0,3).compare("Ext") == 0) {
-                if (is_traveling == 0) 
-                {
-                    *output_stream << "M330" << new_line;
-                    is_traveling = 1;
-                }
-            }
-        }
-        *output_stream << ";END" << new_line;
+        *output_stream << ";BODY_START" << '\n';
 
+        *output_stream << ";TOOL_START FROM_MESH:" << new_nozzle.c_str() << " - " << new_extruder << new_line;
         if (new_extruder == 0)
             *output_stream << "D6" << new_line;
         else
             *output_stream << "D" << new_extruder << new_line;
+      
+        *output_stream << (new_extruder > 0 ? RIGHT_BED : LEFT_BED) << new_line;        
 
-        *output_stream << ";TOOL_START:" << new_nozzle.c_str() << " - " << new_extruder << new_line;
         if (new_extruder > 0) 
         {
-            *output_stream << "G0 A" << A_Axis[new_extruder] << " F600" << new_line;
+            *output_stream << "G0 A" << A_AXIS_POS[new_extruder] << " F600" << new_line;
             *output_stream << "G0 B15.0 F300" << new_line;
         }
         else 
@@ -1050,11 +1071,65 @@ void GCodeExport::startExtruder(const size_t new_extruder)
                 is_traveling = 0;
             }
         }
-        *output_stream << ";END" << new_line;
+        *output_stream << ";END:" << new_line;
+        has_first_extruder_setting = true;
+        current_extruder = new_extruder;
+        
+        return;
     }
 
-    current_extruder = new_extruder;
+    if (has_first_extruder_setting && new_extruder != current_extruder) // wouldn't be the case on the very first extruder start if it's extruder 0
+    {
+        *output_stream << ";EXTRUDER: " << current_extruder << " --> " << new_extruder << new_line;
 
+        if (is_traveling == 0)
+        {
+            *output_stream << "M330" << " ; AirOff" << new_line;
+            is_traveling = 1;
+        }
+        *output_stream << ";TOOL_END" << new_line;
+        *output_stream << "G0 Z40 C30 F420" << new_line;
+        *output_stream << "M29 B"<< new_line;
+        if (new_extruder > 0)
+        {
+            *output_stream << RIGHT_BED << new_line;
+        }
+        else 
+        {
+            *output_stream << LEFT_BED << new_line;
+            if (current_nozzle.substr(0,3).compare("FFF") == 0 || new_nozzle.substr(0,3).compare("Ext") == 0) {
+                if (is_traveling == 0) 
+                {
+                    *output_stream << "M330" << new_line;
+                    is_traveling = 1;
+                }
+            }
+        }
+        *output_stream << ";END" << new_line;    
+        *output_stream << ";TOOL_START:" << new_nozzle.c_str() << " - " << new_extruder << new_line;
+        if (new_extruder == 0)
+            *output_stream << "D6" << new_line;
+        else
+            *output_stream << "D" << new_extruder << new_line;
+
+        if (new_extruder > 0) 
+        {
+            *output_stream << "G0 A" << A_AXIS_POS[new_extruder] << " F600" << new_line;
+            *output_stream << "G0 B15.0 F300" << new_line;
+        }
+        else 
+        {
+            if (new_nozzle.substr(0,3).compare("FFF") == 0 || new_nozzle.substr(0,3).compare("Ext") == 0) {
+                *output_stream << "M301" << new_line;
+                is_traveling = 0;
+            }
+        }
+        *output_stream << ";END" << new_line;        
+
+        current_extruder = new_extruder;
+
+        has_first_extruder_setting = true;
+    }
     assert(getCurrentExtrudedVolume() == 0.0 && "Just after an extruder switch we haven't extruded anything yet!");
     resetExtrusionValue(); // zero the E value on the new extruder, just to be sure
 
@@ -1123,7 +1198,7 @@ void GCodeExport::switchExtruder(size_t new_extruder, const RetractionConfig& re
         }
     }
 
-    startExtruder(new_extruder);
+    startExtruder(new_extruder, false);
 }
 
 void GCodeExport::writeCode(const char* str)

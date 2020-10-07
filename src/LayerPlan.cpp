@@ -1629,6 +1629,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
             //This seems to be the best location to place this, but still not ideal.
             if (path.mesh_id != current_mesh)
             {
+                gcode.startExtruder(extruder_nr, true);
                 current_mesh = path.mesh_id;
                 std::stringstream ss;
                 ss << "MESH:" << current_mesh;

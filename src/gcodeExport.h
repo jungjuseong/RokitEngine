@@ -157,6 +157,8 @@ private:
     bool machine_heated_build_volume;  //!< does the machine have the ability to control/stabilize build-volume-temperature
 
     bool is_traveling;
+    bool has_first_extruder_setting;
+    
 protected:
     /*!
      * Convert an E value to a value in mm (if it wasn't already in mm) for the current extruder.
@@ -290,6 +292,7 @@ public:
     void resetTotalPrintTimeAndFilament();
     
     void writeComment(const std::string& comment);
+    void writeExtrudersUsed(const std::vector<bool> extruder_is_used);
     void writeTypeComment(const PrintFeatureType& type);
 
     /*!
@@ -451,7 +454,7 @@ public:
      * 
      * \param new_extruder The extruder to start with
      */
-    void startExtruder(const size_t new_extruder);
+    void startExtruder(const size_t new_extruder, const bool from_mesh);
 
     /*!
      * Switch to the new_extruder: 
