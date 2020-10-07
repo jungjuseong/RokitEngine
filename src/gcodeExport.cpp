@@ -1018,7 +1018,6 @@ void GCodeExport::startExtruder(const size_t new_extruder)
         if (new_extruder > 0)
         {
             *output_stream << RightPos << new_line;
-            *output_stream << "G0 B15.0 F300" << new_line;
         }
         else 
         {
