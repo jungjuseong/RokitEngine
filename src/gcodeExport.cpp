@@ -1074,7 +1074,7 @@ void GCodeExport::startExtruder(const size_t new_extruder, const bool from_mesh)
             *output_stream << "G0 B15.0 F300" << new_line;
 
         }
-        *output_stream << (new_extruder > 0 ? RIGHT_BED : LEFT_BED) << new_line;        
+        //*output_stream << (new_extruder > 0 ? RIGHT_BED : LEFT_BED) << new_line;        
 
         *output_stream << ";END:" << new_line;
         has_first_extruder_setting = true;
