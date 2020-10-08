@@ -1041,18 +1041,18 @@ void GCodeExport::startExtruder(const size_t new_extruder, const bool from_mesh)
             *output_stream << ";HOPPING - "<< "Well No: 0 of " << well << '\n';
             *output_stream << (new_extruder > 0 ? RIGHT_BED : LEFT_BED) << '\n';
             *output_stream << "G90 G0 " << "X" << HOP_TO.at(well).x << " Y" << HOP_TO.at(well).y << '\n';
-            if (new_extruder == 0)
-            {
-                *output_stream << "G90 G0 Z-40.0" << '\n';
-                *output_stream << "G92 Z0.0" << '\n';
-            }
-            else
-            {
-                *output_stream << ";G0 A" << A_AXIS_POS[new_extruder] << " F600" << '\n';
-                *output_stream << ";G0 B15.00 F300" << '\n';
-                *output_stream << "G90 G0 C-30.0" << '\n';
-                *output_stream << "G92 C0.0" << '\n';
-            }           
+            // if (new_extruder == 0)
+            // {
+            //     *output_stream << "G90 G0 Z-40.0" << '\n';
+            //     *output_stream << "G92 Z0.0" << '\n';
+            // }
+            // else
+            // {
+            //     *output_stream << ";G0 A" << A_AXIS_POS[new_extruder] << " F600" << '\n';
+            //     *output_stream << ";G0 B15.00 F300" << '\n';
+            //     *output_stream << "G90 G0 C-30.0" << '\n';
+            //     *output_stream << "G92 C0.0" << '\n';
+            // }           
             *output_stream << "G92 X0.00 Y0.00" << '\n';
             *output_stream << ";END" << '\n';
         }
