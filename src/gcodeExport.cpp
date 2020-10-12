@@ -589,7 +589,7 @@ void GCodeExport::resetExtrusionValue()
     const std::string nozzle = extruder_settings.get<std::string>("machine_nozzle_id").c_str();    
     
     if (nozzle.substr(0,3).compare("Ext") == 0 || nozzle.substr(0,3).compare("FFF") == 0) {
-        if (!relative_extrusion)
+        if (!relative_extrusion && has_first_extruder_setting)
         {
             *output_stream << "G92 " << extruder_attr[current_extruder].extruderCharacter << "0" << new_line;
         }
@@ -950,16 +950,18 @@ void GCodeExport::writeRetraction(const RetractionConfig& config, bool force, bo
     current_e_value += retraction_diff_e_amount;
     const double output_e = (relative_extrusion)? retraction_diff_e_amount : current_e_value;
 
-    if (nozzle.substr(0,3).compare("FFF") == 0 || nozzle.substr(0,3).compare("Ext") == 0) {
-        *output_stream << "G1 F" << PrecisionedDouble{1, speed} << " E" << PrecisionedDouble{5, output_e};
-    }
-    else
+    if (has_first_extruder_setting) 
     {
-        *output_stream << "M301";
-        is_traveling = 0;
+        if (nozzle.substr(0,3).compare("FFF") == 0 || nozzle.substr(0,3).compare("Ext") == 0) {
+            *output_stream << "G1 F" << PrecisionedDouble{1, speed} << " E" << PrecisionedDouble{5, output_e};
+        }
+        else
+        {
+            *output_stream << "M301";
+            is_traveling = 0;
+        }
+        *output_stream << " ;(Retraction)" << new_line;
     }
-    *output_stream << " ;(Retraction)" << new_line;
-
     currentSpeed = speed;
     estimateCalculator.plan(TimeEstimateCalculator::Position(INT2MM(currentPosition.x), INT2MM(currentPosition.y), INT2MM(currentPosition.z), eToMm(current_e_value)), currentSpeed, PrintFeatureType::MoveRetraction);
     extr_attr.last_retraction_prime_speed = config.primeSpeed;    
@@ -1040,19 +1042,8 @@ void GCodeExport::startExtruder(const size_t new_extruder, const bool from_mesh)
 
             *output_stream << ";HOPPING - "<< "Well No: 0 of " << well << '\n';
             *output_stream << (new_extruder > 0 ? RIGHT_BED : LEFT_BED) << '\n';
-            *output_stream << "G90 G0 " << "X" << HOP_TO.at(well).x << " Y" << HOP_TO.at(well).y << '\n';
-            // if (new_extruder == 0)
-            // {
-            //     *output_stream << "G90 G0 Z-40.0" << '\n';
-            //     *output_stream << "G92 Z0.0" << '\n';
-            // }
-            // else
-            // {
-            //     *output_stream << ";G0 A" << A_AXIS_POS[new_extruder] << " F600" << '\n';
-            //     *output_stream << ";G0 B15.00 F300" << '\n';
-            //     *output_stream << "G90 G0 C-30.0" << '\n';
-            //     *output_stream << "G92 C0.0" << '\n';
-            // }           
+            *output_stream << "G0 " << "X" << HOP_TO.at(well).x << " Y" << HOP_TO.at(well).y << '\n';
+          
             *output_stream << "G92 X0.00 Y0.00" << '\n';
             *output_stream << ";END" << '\n';
         }
