@@ -1043,15 +1043,18 @@ void GCodeExport::startExtruder(const size_t new_extruder, const bool from_mesh)
             *output_stream << ";HOPPING - "<< "Well No: 0 of " << well << '\n';
             *output_stream << (new_extruder > 0 ? RIGHT_BED : LEFT_BED) << '\n';
             *output_stream << "G0 " << "X" << HOP_TO.at(well).x << " Y" << HOP_TO.at(well).y << '\n';
-          
             *output_stream << "G92 X0.00 Y0.00" << '\n';
             *output_stream << ";END" << '\n';
         }
         *output_stream << ";BODY_START" << '\n';
 
-        *output_stream << ";TOOL_SETUP FROM_MESH:" << new_nozzle.c_str() << " - " << new_extruder << new_line;
+        *output_stream << ";TOOL_SETUP FROM_MESH: " << new_nozzle.c_str() << " - " << new_extruder << new_line;
+
         if (new_extruder == 0) 
         {
+            if (dish_type.substr(0,10).compare("Well Plate") != 0)
+                *output_stream << LEFT_BED << '\n';
+
             *output_stream << "D6" << new_line;
             if (new_nozzle.substr(0,3).compare("FFF") == 0 || new_nozzle.substr(0,3).compare("Ext") == 0) {
                 *output_stream << "M301" << new_line;
@@ -1060,6 +1063,9 @@ void GCodeExport::startExtruder(const size_t new_extruder, const bool from_mesh)
         }
         else
         {
+            if (dish_type.substr(0,10).compare("Well Plate") != 0)
+                *output_stream << RIGHT_BED << '\n';
+                
             *output_stream << "D" << new_extruder << new_line;
             *output_stream << "G0 A" << A_AXIS_POS[new_extruder] << " F600" << new_line;
             *output_stream << "G0 B15.0 F300" << new_line;
