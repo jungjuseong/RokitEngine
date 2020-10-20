@@ -726,14 +726,14 @@ void GCodeExport::writeTravel(const coord_t& x, const coord_t& y, const coord_t&
     const std::string nozzle = extruder_settings.get<std::string>("machine_nozzle_id").c_str();    
     
     if (nozzle.substr(0,3).compare("Dis") == 0 || nozzle.substr(0,3).compare("Hot") == 0)
-        if (currentSpeed != speed) 
+        //if (currentSpeed != speed) 
+        //{
+        if (is_traveling == 0)
         {
-            if (is_traveling == 0)
-            {
-                *output_stream << "M330" << new_line;
-                is_traveling = 1;
-            }
+            *output_stream << "M330" << new_line;
+            is_traveling = 1;
         }
+        //}
 
     *output_stream << "G0";
     writeFXYZE(speed, x, y, z, current_e_value, travel_move_type);
@@ -809,7 +809,8 @@ void GCodeExport::writeExtrusion(const int x, const int y, const int z, const Ve
     
     if (nozzle.substr(0,3).compare("FFF") != 0 && nozzle.substr(0,3).compare("Ext") != 0)
     {
-        if (currentSpeed != speed || is_traveling == 1)
+        //if (currentSpeed != speed || is_traveling == 1)
+        if (is_traveling == 1)
         {
             *output_stream << "M301" << new_line;
             is_traveling = 0;
@@ -1032,10 +1033,10 @@ void GCodeExport::startExtruder(const size_t new_extruder, const bool from_mesh)
         {"48", {"-32.25","45.15"}},
         {"96", {"-31.50","49.50"}}
     };
-
+    
     if (from_mesh && has_first_extruder_setting == false) 
     {
-        // Add HOPPING code when wellplate
+        // Add HOPPING code when Wellplate
         if (dish_type.substr(0,10).compare("Well Plate") == 0) {
 
             std::string well = dish_type.substr(11);
@@ -1087,12 +1088,12 @@ void GCodeExport::startExtruder(const size_t new_extruder, const bool from_mesh)
             *output_stream << "M330" << new_line;
             is_traveling = 1;
         }
-        *output_stream << ";TOOL_SETUP" << new_nozzle.c_str() << " - " << new_extruder << new_line;;
-        *output_stream << "G0 Z40 C30 F420" << new_line;
-        *output_stream << "M29 B"<< new_line;
+        *output_stream << ";TOOL_SETUP:" << new_nozzle.c_str() << " - " << new_extruder << new_line;;
+        //*output_stream << "G0 Z40 C30 F420" << new_line;
+        //*output_stream << "M29 B"<< new_line;
         if (new_extruder == 0) // LEFT Tool
         {
-            *output_stream << LEFT_BED << new_line;
+            //*output_stream << LEFT_BED << new_line;
             if (current_nozzle.substr(0,3).compare("FFF") == 0 || new_nozzle.substr(0,3).compare("Ext") == 0) {
                 if (is_traveling == 0) 
                 {
@@ -1108,7 +1109,7 @@ void GCodeExport::startExtruder(const size_t new_extruder, const bool from_mesh)
         }
         else // RIGHT Tools
         {
-            *output_stream << RIGHT_BED << new_line;
+            //*output_stream << RIGHT_BED << new_line;
             *output_stream << "D" << new_extruder << new_line;
             *output_stream << "G0 A" << A_AXIS_POS[new_extruder] << " F600" << new_line;
             *output_stream << "G0 B15.0 F300" << new_line;

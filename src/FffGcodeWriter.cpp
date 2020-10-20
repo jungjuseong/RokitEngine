@@ -85,35 +85,6 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage, TimeKeeper& time_keep
     const Settings& extruder_settings = Application::getInstance().current_slice->scene.extruders[start_extruder_nr].settings;
     const std::string start_nozzle = extruder_settings.get<std::string>("machine_nozzle_id");    
 
-    //std::ostringstream tmp;
-    //tmp << '\n';
-
-    // tmp << ";TOOL_SETUP: " << start_nozzle.c_str() << '\n';
-
-    // if (start_extruder_nr == 0)
-    //     tmp << "D6" << '\n';
-    // else
-    //     tmp << "D" << start_extruder_nr << '\n';
-
-    // INVIVO
-    // const int A_Axis[6] = {0, 0, -72,  72, 144, -144};
-    
-    // if (start_extruder_nr > 0) 
-    // {
-    //     tmp << "G0 A" << A_Axis[start_extruder_nr] << " F600" << '\n';
-    //     tmp << RightPos << '\n';
-    // }
-    // else 
-    // {
-    //     tmp << LeftPos << '\n';
-    //     if (start_nozzle.substr(0,3).compare("FFF") == 0 || start_nozzle.substr(0,3).compare("Ext") == 0) {
-    //         tmp << "M301" << '\n';
-    //     }
-    // }
-    // tmp << ";END";
-
-    //gcode.writeLine(tmp.str().c_str());    
-
     { // calculate the mesh order for each extruder
         const size_t extruder_count = Application::getInstance().current_slice->scene.extruders.size();
         mesh_order_per_extruder.clear(); // Might be not empty in case of sequential printing. 

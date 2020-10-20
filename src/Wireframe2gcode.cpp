@@ -47,7 +47,7 @@ void Wireframe2gcode::writeGCode()
     processSkirt();
 
     unsigned int total_layers = wireFrame.layers.size();
-    gcode.writeLayerComment(0);
+    gcode.writeLayerComment(0);    
     gcode.writeTypeComment(PrintFeatureType::SkirtBrim);
 
     for (PolygonRef bottom_part : wireFrame.bottom_infill.roof_outlines)

@@ -1449,8 +1449,6 @@ void LayerPlan::processFanSpeedAndMinimalLayerTime(Point starting_position)
     }
 }
 
-
-
 void LayerPlan::writeGCode(GCodeExport& gcode)
 {
     Communication* communication = Application::getInstance().communication;
@@ -1485,10 +1483,13 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
         const RetractionConfig& retraction_config = storage.retraction_config_per_extruder[extruder_plan.extruder_nr];
         coord_t z_hop_height = retraction_config.zHop;
 
+        gcode.startExtruder(extruder_plan.extruder_nr, true);
+
         if (extruder_nr != extruder_plan.extruder_nr)
         {
             int prev_extruder = extruder_nr;
             extruder_nr = extruder_plan.extruder_nr;
+
 
             gcode.ResetLastEValueAfterWipe(prev_extruder);
 
@@ -1629,7 +1630,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
             //This seems to be the best location to place this, but still not ideal.
             if (path.mesh_id != current_mesh)
             {
-                gcode.startExtruder(extruder_nr, true);
+                //gcode.startExtruder(extruder_nr, true);
                 current_mesh = path.mesh_id;
                 std::stringstream ss;
                 ss << "MESH:" << current_mesh;
