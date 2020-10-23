@@ -60,8 +60,6 @@ void Wireframe2gcode::writeGCode()
         }
     }
     
-    
-    
     // bottom:
     Polygons empty_outlines;
     writeFill(wireFrame.bottom_infill.roof_insets, empty_outlines, 
@@ -119,9 +117,7 @@ void Wireframe2gcode::writeGCode()
                 {
                     handle_segment(part, segment_idx);
                 }
-            }
-            
-            
+            }     
             
             gcode.writeTypeComment(PrintFeatureType::OuterWall); // top
             {

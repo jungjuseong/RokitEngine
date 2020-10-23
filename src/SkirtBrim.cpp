@@ -219,24 +219,22 @@ void SkirtBrim::generate(SliceDataStorage& storage, Polygons first_layer_outline
         std::vector<bool> extruder_is_used = storage.getExtrudersUsed();
         for (size_t extruder_nr = 0; extruder_nr < Application::getInstance().current_slice->scene.extruders.size(); extruder_nr++)
         {
+            const Settings& extruder_settings = scene.extruders[extruder_nr].settings;
+            EPlatformAdhesion adhesion_type = extruder_settings.get<EPlatformAdhesion>("adhesion_type");
+            const coord_t skirt_line_count = extruder_settings.get<size_t>("skirt_line_count"); 
+
             if (extruder_nr == adhesion_extruder_nr || !extruder_is_used[extruder_nr])
             {
                 continue;
             }
-
-            const ExtruderTrain& train = Application::getInstance().current_slice->scene.extruders[extruder_nr];
-            const coord_t width = train.settings.get<coord_t>("skirt_brim_line_width") * train.settings.get<Ratio>("initial_layer_line_width_factor");
-            coord_t minimal_length = train.settings.get<coord_t>("skirt_brim_minimal_length");
-
-            // INVIVO4D6
-            //const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
-            EPlatformAdhesion adhesion_type = train.settings.get<EPlatformAdhesion>("adhesion_type");
-
-            const coord_t skirt_line_count = train.settings.get<size_t>("skirt_line_count"); 
-            if (adhesion_type == EPlatformAdhesion::NONE || (adhesion_type == EPlatformAdhesion::SKIRT && skirt_line_count == 0)) {
+            if (adhesion_type == EPlatformAdhesion::NONE || skirt_line_count == 0) 
+            {
                 //ExtruderTrain& adhesion_train = mesh_group_settings.get<ExtruderTrain&>("adhesion_extruder_nr");
-                minimal_length = 0;
+                continue;
             }
+
+            const coord_t width = extruder_settings.get<coord_t>("skirt_brim_line_width") * extruder_settings.get<Ratio>("initial_layer_line_width_factor");
+            coord_t minimal_length = extruder_settings.get<coord_t>("skirt_brim_minimal_length");
 
             offset_distance += last_width / 2 + width/2;
             last_width = width;

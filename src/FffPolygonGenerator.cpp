@@ -1026,11 +1026,16 @@ void FffPolygonGenerator::processPlatformAdhesion(SliceDataStorage& storage)
 {
     const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
     ExtruderTrain& train = mesh_group_settings.get<ExtruderTrain&>("adhesion_extruder_nr");
+    EPlatformAdhesion adhesion_type = mesh_group_settings.get<EPlatformAdhesion>("adhesion_type");
+
+    // Scene& scene = Application::getInstance().current_slice->scene;
+    // const size_t adhesion_extruder_nr = scene.current_mesh_group->settings.get<ExtruderTrain&>("adhesion_extruder_nr").extruder_nr;
+    // const Settings& adhesion_extruder_settings = scene.extruders[adhesion_extruder_nr].settings;
+    // ExtruderTrain& train = adhesion_extruder_settings.get<ExtruderTrain&>("adhesion_extruder_nr");
+    // EPlatformAdhesion adhesion_type = adhesion_extruder_settings.get<EPlatformAdhesion>("adhesion_type");
 
     Polygons first_layer_outline;
     coord_t primary_line_count;
-
-    EPlatformAdhesion adhesion_type = mesh_group_settings.get<EPlatformAdhesion>("adhesion_type");
 
     if (adhesion_type == EPlatformAdhesion::SKIRT)
     {

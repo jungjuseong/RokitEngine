@@ -985,8 +985,16 @@ void FffGcodeWriter::processSkirtBrim(const SliceDataStorage& storage, LayerPlan
     {
         return;
     }
-    // Start brim close to the prime location
+
     const ExtruderTrain& train = Application::getInstance().current_slice->scene.extruders[extruder_nr];
+    EPlatformAdhesion adhesion_type = train.settings.get<EPlatformAdhesion>("adhesion_type");
+    const coord_t skirt_line_count = train.settings.get<size_t>("skirt_line_count"); 
+    if (adhesion_type == EPlatformAdhesion::NONE || skirt_line_count == 0) 
+    {
+        return;
+    }
+
+    // Start brim close to the prime location
     Point start_close_to;
     if (train.settings.get<bool>("prime_blob_enable"))
     {
