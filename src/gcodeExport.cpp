@@ -1041,8 +1041,11 @@ void GCodeExport::startExtruder(const size_t new_extruder, const bool from_mesh)
     if (from_mesh && has_first_extruder_setting == false) 
     {
         // Add HOPPING code when WellPlate and Dispenser
-        if (is_wellplate && new_extruder > 0) 
+        if (is_wellplate) 
         {
+            if (new_extruder == 0)
+                return;
+                
             std::string well = dish_type.substr(11);
             
             *output_stream << ";HOPPING - "<< "Well No: 0 of " << well << '\n';
@@ -1050,22 +1053,28 @@ void GCodeExport::startExtruder(const size_t new_extruder, const bool from_mesh)
             *output_stream << "G0 " << "X" << Jump.at(well).x << " Y" << Jump.at(well).y << '\n';
             *output_stream << "G92 X0.00 Y0.00" << '\n';
             *output_stream << ";END" << '\n';
-        }
-        *output_stream << ";BODY_START" << '\n';
-        *output_stream << ";TOOL_SETUP FROM_MESH: " << new_nozzle.c_str() << " - " << new_extruder << new_line;
 
-        if (is_wellplate == false)
-            *output_stream << (new_extruder == 0 ? LEFT_BED : RIGHT_BED) << '\n';
-
-        *output_stream << (new_extruder == 0 ? "D6" : "D" + std::to_string(new_extruder)) << '\n';
-        if (new_is_extruder) {
-            *output_stream << "M301" << new_line;
-            is_traveling = 0;                
+            *output_stream << ";BODY_START" << '\n';
+            *output_stream << ";TOOL_SETUP FROM_MESH: " << new_nozzle.c_str() << " - " << new_extruder << new_line;
+            *output_stream << "D" + std::to_string(new_extruder) << '\n';
+            *output_stream << "G0 A" << A_AXIS_POS[new_extruder] << " F600" << new_line;
+            *output_stream << "G0 B15.0 F300" << new_line;
         }
         else
         {
-            *output_stream << "G0 A" << A_AXIS_POS[new_extruder] << " F600" << new_line;
-            *output_stream << "G0 B15.0 F300" << new_line;
+            *output_stream << ";BODY_START" << '\n';
+            *output_stream << ";TOOL_SETUP FROM_MESH: " << new_nozzle.c_str() << " - " << new_extruder << new_line;
+            *output_stream << (new_extruder == 0 ? LEFT_BED : RIGHT_BED) << '\n';
+            *output_stream << (new_extruder == 0 ? "D6" : "D" + std::to_string(new_extruder)) << '\n';
+            if (new_is_extruder) {
+                *output_stream << "M301" << new_line;
+                is_traveling = 0;                
+            }
+            else
+            {
+                *output_stream << "G0 A" << A_AXIS_POS[new_extruder] << " F600" << new_line;
+                *output_stream << "G0 B15.0 F300" << new_line;
+            }
         }
         *output_stream << ";END:" << new_line;
 
