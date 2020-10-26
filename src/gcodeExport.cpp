@@ -1066,9 +1066,9 @@ void GCodeExport::startExtruder(const size_t new_extruder, const bool from_mesh)
             *output_stream << ";TOOL_SETUP FROM_MESH: " << new_nozzle.c_str() << " - " << new_extruder << new_line;
             *output_stream << (new_extruder == 0 ? LEFT_BED : RIGHT_BED) << '\n';
             *output_stream << (new_extruder == 0 ? "D6" : "D" + std::to_string(new_extruder)) << '\n';
-            if (new_is_extruder) {
-                *output_stream << "M301" << new_line;
-                is_traveling = 0;                
+            if (new_is_extruder == 0) {
+                //*output_stream << "M301" << new_line;
+                //is_traveling = 0;                
             }
             else
             {
@@ -1093,7 +1093,7 @@ void GCodeExport::startExtruder(const size_t new_extruder, const bool from_mesh)
         }
         *output_stream << ";TOOL_SETUP:" << new_nozzle.c_str() << " - " << new_extruder << new_line;;
 
-        if (new_extruder == 0) // LEFT Tool
+        if (new_extruder == 0)
         {
             if (current_is_extruder) {
                 if (is_traveling == 0) 
