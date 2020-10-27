@@ -1040,7 +1040,7 @@ void GCodeExport::startExtruder(const size_t new_extruder, const bool from_mesh)
 
     if (from_mesh && has_first_extruder_setting == false) 
     {
-        // Add HOPPING code when WellPlate and Dispenser
+        // Add HOPPING code when dish type is the WellPlate and tool is the Dispenser
         if (is_wellplate) 
         {
             if (new_extruder == 0)
@@ -1059,14 +1059,14 @@ void GCodeExport::startExtruder(const size_t new_extruder, const bool from_mesh)
             *output_stream << "D" + std::to_string(new_extruder) << '\n';
             *output_stream << "G0 A" << A_AXIS_POS[new_extruder] << " F600" << new_line;
             *output_stream << "G0 B15.0 F300" << new_line;
-        }
+        } 
         else
         {
             *output_stream << ";BODY_START" << '\n';
             *output_stream << ";TOOL_SETUP FROM_MESH: " << new_nozzle.c_str() << " - " << new_extruder << new_line;
             *output_stream << (new_extruder == 0 ? LEFT_BED : RIGHT_BED) << '\n';
             *output_stream << (new_extruder == 0 ? "D6" : "D" + std::to_string(new_extruder)) << '\n';
-            if (new_is_extruder == 0) {
+            if (new_extruder == 0) {
                 //*output_stream << "M301" << new_line;
                 //is_traveling = 0;                
             }
