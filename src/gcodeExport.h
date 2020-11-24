@@ -419,6 +419,12 @@ private:
      * \param feature print feature to track print time for
      */
     void writeMoveBFB(const int x, const int y, const int z, const Velocity& speed, double extrusion_mm3_per_mm, PrintFeatureType feature);
+    /*!
+     *  Check whether name is extruder.
+     *
+     * \param nozzle nozzle name
+     */
+    bool isExtruderName(std::string nozzle);
 public:
     /*!
      * Get ready for extrusion moves:

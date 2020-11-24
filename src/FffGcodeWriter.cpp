@@ -5,6 +5,7 @@
 #include <array>
 #include <map>
 #include <limits> // numeric_limits
+#include <algorithm>
 
 #include "Application.h"
 #include "bridge.h"

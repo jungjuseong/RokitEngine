@@ -588,7 +588,7 @@ void GCodeExport::resetExtrusionValue()
     const Settings& extruder_settings = Application::getInstance().current_slice->scene.extruders[getExtruderNr()].settings;
     const std::string nozzle = extruder_settings.get<std::string>("machine_nozzle_id").c_str();    
     
-    if (nozzle.substr(0,3).compare("Ext") == 0 || nozzle.substr(0,3).compare("FFF") == 0) {
+    if (isExtruderName(nozzle)) {
         if (!relative_extrusion && has_first_extruder_setting)
         {
             *output_stream << "G92 " << extruder_attr[current_extruder].extruderCharacter << "0" << new_line;
@@ -726,15 +726,13 @@ void GCodeExport::writeTravel(const coord_t& x, const coord_t& y, const coord_t&
     const std::string nozzle = extruder_settings.get<std::string>("machine_nozzle_id").c_str();    
     
     if (nozzle.substr(0,3).compare("Dis") == 0 || nozzle.substr(0,3).compare("Hot") == 0)
-        //if (currentSpeed != speed) 
-        //{
+    {
         if (is_traveling == 0)
         {
             *output_stream << "M330" << new_line;
             is_traveling = 1;
         }
-        //}
-
+    }
     *output_stream << "G0";
     writeFXYZE(speed, x, y, z, current_e_value, travel_move_type);
 }
@@ -807,9 +805,8 @@ void GCodeExport::writeExtrusion(const int x, const int y, const int z, const Ve
     const Settings& extruder_settings = Application::getInstance().current_slice->scene.extruders[getExtruderNr()].settings;
     const std::string nozzle = extruder_settings.get<std::string>("machine_nozzle_id").c_str();    
     
-    if (nozzle.substr(0,3).compare("FFF") != 0 && nozzle.substr(0,3).compare("Ext") != 0)
+    if (!isExtruderName(nozzle))
     {
-        //if (currentSpeed != speed || is_traveling == 1)
         if (is_traveling == 1)
         {
             *output_stream << "M301" << new_line;
@@ -846,7 +843,7 @@ void GCodeExport::writeFXYZE(const Velocity& speed, const int x, const int y, co
     if (e + current_e_offset != current_e_value)
     {
         const double output_e = (relative_extrusion)? e + current_e_offset - current_e_value : e + current_e_offset;
-        if (nozzle.substr(0,3).compare("FFF") == 0 || nozzle.substr(0,3).compare("Ext") == 0) 
+        if (isExtruderName(nozzle)) 
         {
             *output_stream << " E" << PrecisionedDouble{5, output_e};
         }
@@ -873,7 +870,7 @@ void GCodeExport::writeUnretractionAndPrime()
     {
         current_e_value += extruder_attr[current_extruder].retraction_e_amount_current;
         const double output_e = (relative_extrusion)? extruder_attr[current_extruder].retraction_e_amount_current + prime_volume_e : current_e_value;
-        if (nozzle.substr(0,3).compare("FFF") == 0 || nozzle.substr(0,3).compare("Ext") == 0) 
+        if (isExtruderName(nozzle)) 
         {        
             *output_stream << "G1 F" << PrecisionedDouble{1, last_retraction_prime_speed} << " E" << PrecisionedDouble{5, output_e};
         }
@@ -953,7 +950,7 @@ void GCodeExport::writeRetraction(const RetractionConfig& config, bool force, bo
 
     if (has_first_extruder_setting) 
     {
-        if (nozzle.substr(0,3).compare("FFF") == 0 || nozzle.substr(0,3).compare("Ext") == 0) {
+        if (isExtruderName(nozzle)) {
             *output_stream << "G1 F" << PrecisionedDouble{1, speed} << " E" << PrecisionedDouble{5, output_e};
         }
         else
@@ -1035,8 +1032,8 @@ void GCodeExport::startExtruder(const size_t new_extruder, const bool from_mesh)
     };
     
     const bool is_wellplate = (dish_type.substr(0,10).compare("Well Plate") == 0);
-    const bool new_is_extruder = (new_nozzle.substr(0,3).compare("FFF") == 0 || new_nozzle.substr(0,3).compare("Ext") == 0);
-    const bool current_is_extruder = (current_nozzle.substr(0,3).compare("FFF") == 0 || current_nozzle.substr(0,3).compare("Ext") == 0);
+
+    std::string ExtruderNames = "FFF Ext";
 
     if (from_mesh && has_first_extruder_setting == false) 
     {
@@ -1066,17 +1063,22 @@ void GCodeExport::startExtruder(const size_t new_extruder, const bool from_mesh)
             *output_stream << ";TOOL_SETUP FROM_MESH: " << new_nozzle.c_str() << " - " << new_extruder << new_line;
             *output_stream << (new_extruder == 0 ? LEFT_BED : RIGHT_BED) << '\n';
             *output_stream << (new_extruder == 0 ? "D6" : "D" + std::to_string(new_extruder)) << '\n';
-            if (new_extruder == 0) {
-                //*output_stream << "M301" << new_line;
-                //is_traveling = 0;                
-            }
-            else
+
+            if (new_extruder == 0) 
+            {
+                if (isExtruderName(new_nozzle))
+                {
+                    *output_stream << "M301" << new_line;
+                    is_traveling = 0;
+                }
+            } 
+            else 
             {
                 *output_stream << "G0 A" << A_AXIS_POS[new_extruder] << " F600" << new_line;
                 *output_stream << "G0 B15.0 F300" << new_line;
             }
         }
-        *output_stream << ";END:" << new_line;
+        *output_stream << ";END" << new_line;
 
         has_first_extruder_setting = true;
         current_extruder = new_extruder;
@@ -1095,15 +1097,16 @@ void GCodeExport::startExtruder(const size_t new_extruder, const bool from_mesh)
 
         if (new_extruder == 0)
         {
-            if (current_is_extruder) {
+            if (isExtruderName(current_nozzle)) {
                 if (is_traveling == 0) 
                 {
                     *output_stream << "M330" << new_line;
                     is_traveling = 1;
                 }
             }
-            *output_stream << "D6" << new_line;
-            if (new_is_extruder) {
+            *output_stream << "D6" << new_line << " ;" << isExtruderName(new_nozzle) ? "T" : "F";
+            if (isExtruderName(new_nozzle)) 
+            {
                 *output_stream << "M301" << new_line;
                 is_traveling = 0;
             }
@@ -1551,6 +1554,13 @@ void GCodeExport::insertWipeScript(const WipeScriptConfig& wipe_config)
     }
 
     writeComment("WIPE_SCRIPT_END");
+}
+
+bool GCodeExport::isExtruderName(const std::string nozzle) {
+    const std::string _ExtruderNames = "FFF Ext";
+    size_t found = _ExtruderNames.find(nozzle.substr(0,3));
+
+    return (found != std::string::npos);
 }
 
 }//namespace cura

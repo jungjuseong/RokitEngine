@@ -1,4 +1,4 @@
-OrganRegenEngine
+build
 ==========
 
 set PROTOBUF_MINGW_SRC=D:/dev/protobuf-3.0.0-mingw/
@@ -7,11 +7,16 @@ set PROTOBUF_MINGW_INSTALL=%PROTOBUF_MINGW_SRC%/install_dir/
 
 set ARCUS_DIR=D:/dev/libArcus-mingw/install_dir/lib/cmake/Arcus
 
-cmake -DCMAKE_INSTALL_PREFIX=../install_dir -DPROTOBUF_SRC_ROOT_FOLDER=%PROTOBUF_MINGW_SRC% -DPROTOBUF_LIBRARY=%PROTOBUF_MINGW_INSTALL%/lib/libprotobuf.a -DPROTOBUF_INCLUDE_DIR=%PROTOBUF_MINGW_INSTALL%/include -DPROTOBUF_PROTOC_EXECUTABLE=%PROTOBUF_MINGW_INSTALL%/bin/protoc -DBUILD_EXAMPLES=OFF -DBUILD_STATIC=ON -DBUILD_PYTHON=OFF -DCMAKE_BUILD_TYPE=Release -G "MinGW Makefiles" ..
+$ cmake -DCMAKE_INSTALL_PREFIX=../install_dir -DPROTOBUF_SRC_ROOT_FOLDER=%PROTOBUF_MINGW_SRC% -DPROTOBUF_LIBRARY=%PROTOBUF_MINGW_INSTALL%/lib/libprotobuf.a -DPROTOBUF_INCLUDE_DIR=%PROTOBUF_MINGW_INSTALL%/include -DPROTOBUF_PROTOC_EXECUTABLE=%PROTOBUF_MINGW_INSTALL%/bin/protoc -DBUILD_EXAMPLES=OFF -DBUILD_STATIC=ON -DBUILD_PYTHON=OFF -DCMAKE_BUILD_TYPE=Release -G "MinGW Makefiles" ..
 
 $ mingw32-make
 
 $ mingw32-make install
+
+$ copy ..\install_dir\bin\OrganRegenEngine.exe \dev2\OrganRegenerator
+
+OrganRegenEngine
+==========
 
 The OrganRegenEngine is a C++ console application for 3D printing GCode generation. It has been made as a better and faster alternative to the old Skeinforge engine.
 
