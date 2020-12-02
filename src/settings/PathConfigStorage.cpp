@@ -202,6 +202,8 @@ PathConfigStorage::PathConfigStorage(const SliceDataStorage& storage, const Laye
     for (size_t extruder_nr = 0; extruder_nr < extruder_count; extruder_nr++)
     {
         const ExtruderTrain& train = Application::getInstance().current_slice->scene.extruders[extruder_nr];
+        const bool has_raft = train.settings.get<EPlatformAdhesion>("adhesion_type") == EPlatformAdhesion::RAFT;
+
         travel_config_per_extruder.emplace_back(
                 PrintFeatureType::MoveCombing
                 , 0
@@ -211,16 +213,14 @@ PathConfigStorage::PathConfigStorage(const SliceDataStorage& storage, const Laye
             );
         skirt_brim_config_per_extruder.emplace_back(
                 PrintFeatureType::SkirtBrim
-                , train.settings.get<coord_t>("skirt_brim_line_width")
-                    * ((mesh_group_settings.get<EPlatformAdhesion>("adhesion_type") == EPlatformAdhesion::RAFT) ? 1.0_r : line_width_factor_per_extruder[extruder_nr]) // cause it's also used for the draft/ooze shield
+                , train.settings.get<coord_t>("skirt_brim_line_width") * (has_raft ? 1.0_r : line_width_factor_per_extruder[extruder_nr]) // cause it's also used for the draft/ooze shield
                 , layer_thickness
                 , train.settings.get<Ratio>("skirt_brim_material_flow") * ((layer_nr == 0) ? train.settings.get<Ratio>("material_flow_layer_0") : Ratio(1.0))
                 , GCodePathConfig::SpeedDerivatives{train.settings.get<Velocity>("skirt_brim_speed"), train.settings.get<Acceleration>("acceleration_skirt_brim"), train.settings.get<Velocity>("jerk_skirt_brim")}
             );
         prime_tower_config_per_extruder.emplace_back(
                 PrintFeatureType::PrimeTower
-                , train.settings.get<coord_t>("prime_tower_line_width")
-                    * ((mesh_group_settings.get<EPlatformAdhesion>("adhesion_type") == EPlatformAdhesion::RAFT) ? 1.0_r : line_width_factor_per_extruder[extruder_nr])
+                , train.settings.get<coord_t>("prime_tower_line_width") * (has_raft ? 1.0_r : line_width_factor_per_extruder[extruder_nr])
                 , layer_thickness
                 , train.settings.get<Ratio>("prime_tower_flow") * ((layer_nr == 0) ? train.settings.get<Ratio>("material_flow_layer_0") : Ratio(1.0))
                 , GCodePathConfig::SpeedDerivatives{train.settings.get<Velocity>("speed_prime_tower"), train.settings.get<Acceleration>("acceleration_prime_tower"), train.settings.get<Velocity>("jerk_prime_tower")}

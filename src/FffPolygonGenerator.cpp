@@ -1,7 +1,6 @@
 //Copyright (c) 2018 Ultimaker B.V.
 //OrganRegenEngine is released under the terms of the AGPLv3 or higher.
 
-#include <algorithm>
 #include <map> // multimap (ordered map allowing duplicate keys)
 #include <fstream> // ifstream.good()
 
@@ -47,7 +46,6 @@
 #include "utils/logoutput.h"
 #include "utils/math.h"
 
-
 namespace cura
 {
 
@@ -76,7 +74,7 @@ size_t FffPolygonGenerator::getDraftShieldLayerCount(const size_t total_layers) 
         case DraftShieldHeightLimitation::FULL:
             return total_layers;
         case DraftShieldHeightLimitation::LIMITED:
-            return std::max((coord_t)0, (mesh_group_settings.get<coord_t>("draft_shield_height") - mesh_group_settings.get<coord_t>("layer_height_0")) / mesh_group_settings.get<coord_t>("layer_height") + 1);
+            return std::max<unsigned int>((coord_t)0, (mesh_group_settings.get<coord_t>("draft_shield_height") - mesh_group_settings.get<coord_t>("layer_height_0")) / mesh_group_settings.get<coord_t>("layer_height") + 1);
         default:
             logWarning("A draft shield height limitation option was added without implementing the new option in getDraftShieldLayerCount.");
             return total_layers;
@@ -201,7 +199,7 @@ bool FffPolygonGenerator::sliceModel(MeshGroup* meshgroup, TimeKeeper& timeKeepe
         Slicer* slicer = slicerList[meshIdx];
         if (!mesh.settings.get<bool>("anti_overhang_mesh") && !mesh.settings.get<bool>("infill_mesh") && !mesh.settings.get<bool>("cutting_mesh"))
         {
-            storage.print_layer_count = std::max(storage.print_layer_count, slicer->layers.size());
+            storage.print_layer_count = std::max<unsigned int>(storage.print_layer_count, slicer->layers.size());
         }
     }
     storage.support.supportLayers.resize(storage.print_layer_count);
@@ -263,10 +261,7 @@ bool FffPolygonGenerator::sliceModel(MeshGroup* meshgroup, TimeKeeper& timeKeepe
             if (has_raft)
             {
                 const ExtruderTrain& train = mesh_group_settings.get<ExtruderTrain&>("adhesion_extruder_nr");
-                layer.printZ +=
-                    Raft::getTotalThickness()
-                    + train.settings.get<coord_t>("raft_airgap")
-                    - train.settings.get<coord_t>("layer_0_z_overlap"); // shift all layers (except 0) down
+                layer.printZ += Raft::getTotalThickness() + train.settings.get<coord_t>("raft_airgap") - train.settings.get<coord_t>("layer_0_z_overlap"); // shift all layers (except 0) down
 
                 if (layer_nr == 0)
                 {
@@ -286,12 +281,12 @@ void FffPolygonGenerator::slices2polygons(SliceDataStorage& storage, TimeKeeper&
 {
     // compute layer count and remove first empty layers
     // there is no separate progress stage for removeEmptyFisrtLayer (TODO)
-    unsigned int slice_layer_count = 0;
+    u_int slice_layer_count = 0;
     for (SliceMeshStorage& mesh : storage.meshes)
     {
         if (!mesh.settings.get<bool>("infill_mesh") && !mesh.settings.get<bool>("anti_overhang_mesh"))
         {
-            slice_layer_count = std::max<unsigned int>(slice_layer_count, mesh.layers.size());
+            slice_layer_count = std::max<u_int>(slice_layer_count, mesh.layers.size());
         }
     }
 
@@ -466,10 +461,10 @@ void FffPolygonGenerator::processBasicWallsSkinInfill(SliceDataStorage& storage,
     // skin & infill
 
     const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
-    size_t mesh_max_initial_bottom_layer_count = 0;
+    u_int mesh_max_initial_bottom_layer_count = 0;
     if (mesh_group_settings.get<bool>("magic_spiralize"))
     {
-        mesh_max_initial_bottom_layer_count = std::max(mesh_max_initial_bottom_layer_count, mesh.settings.get<size_t>("initial_bottom_layers"));
+        mesh_max_initial_bottom_layer_count = std::max<u_int>(mesh_max_initial_bottom_layer_count, mesh.settings.get<size_t>("initial_bottom_layers"));
     }
 
     processed_layer_count = 0;
@@ -926,24 +921,17 @@ void FffPolygonGenerator::computePrintHeightStatistics(SliceDataStorage& storage
         //Height of where the support reaches.
         Scene& scene = Application::getInstance().current_slice->scene;
         const size_t support_infill_extruder_nr = scene.current_mesh_group->settings.get<ExtruderTrain&>("support_infill_extruder_nr").extruder_nr; // TODO: Support extruder should be configurable per object.
-        max_print_height_per_extruder[support_infill_extruder_nr] =
-            std::max(max_print_height_per_extruder[support_infill_extruder_nr],
-                     storage.support.layer_nr_max_filled_layer);
+        max_print_height_per_extruder[support_infill_extruder_nr] = std::max<u_int>(max_print_height_per_extruder[support_infill_extruder_nr],storage.support.layer_nr_max_filled_layer);
         const size_t support_roof_extruder_nr = scene.current_mesh_group->settings.get<ExtruderTrain&>("support_roof_extruder_nr").extruder_nr; // TODO: Support roof extruder should be configurable per object.
-        max_print_height_per_extruder[support_roof_extruder_nr] =
-            std::max(max_print_height_per_extruder[support_roof_extruder_nr],
-                     storage.support.layer_nr_max_filled_layer);
+        max_print_height_per_extruder[support_roof_extruder_nr] = std::max<u_int>(max_print_height_per_extruder[support_roof_extruder_nr],storage.support.layer_nr_max_filled_layer);
         const size_t support_bottom_extruder_nr = scene.current_mesh_group->settings.get<ExtruderTrain&>("support_bottom_extruder_nr").extruder_nr; //TODO: Support bottom extruder should be configurable per object.
-        max_print_height_per_extruder[support_bottom_extruder_nr] =
-            std::max(max_print_height_per_extruder[support_bottom_extruder_nr],
-                     storage.support.layer_nr_max_filled_layer);
+        max_print_height_per_extruder[support_bottom_extruder_nr] = std::max<u_int>(max_print_height_per_extruder[support_bottom_extruder_nr],storage.support.layer_nr_max_filled_layer);
 
         //Height of where the platform adhesion reaches.
         if (scene.current_mesh_group->settings.get<EPlatformAdhesion>("adhesion_type") != EPlatformAdhesion::NONE)
         {
             const size_t adhesion_extruder_nr = scene.current_mesh_group->settings.get<ExtruderTrain&>("adhesion_extruder_nr").extruder_nr;
-            max_print_height_per_extruder[adhesion_extruder_nr] =
-                std::max(0, max_print_height_per_extruder[adhesion_extruder_nr]);
+            max_print_height_per_extruder[adhesion_extruder_nr] = std::max<u_int>(0, max_print_height_per_extruder[adhesion_extruder_nr]);
         }
     }
 
@@ -1024,31 +1012,31 @@ void FffPolygonGenerator::processDraftShield(SliceDataStorage& storage)
 
 void FffPolygonGenerator::processPlatformAdhesion(SliceDataStorage& storage)
 {
-    const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
-    ExtruderTrain& train = mesh_group_settings.get<ExtruderTrain&>("adhesion_extruder_nr");
-    EPlatformAdhesion adhesion_type = mesh_group_settings.get<EPlatformAdhesion>("adhesion_type");
+    Scene& scene = Application::getInstance().current_slice->scene;
 
-    // Scene& scene = Application::getInstance().current_slice->scene;
-    // const size_t adhesion_extruder_nr = scene.current_mesh_group->settings.get<ExtruderTrain&>("adhesion_extruder_nr").extruder_nr;
-    // const Settings& adhesion_extruder_settings = scene.extruders[adhesion_extruder_nr].settings;
-    // ExtruderTrain& train = adhesion_extruder_settings.get<ExtruderTrain&>("adhesion_extruder_nr");
-    // EPlatformAdhesion adhesion_type = adhesion_extruder_settings.get<EPlatformAdhesion>("adhesion_type");
+    const Settings& mesh_group_settings = scene.current_mesh_group->settings;
+    // ExtruderTrain& adhesion_train = mesh_group_settings.get<ExtruderTrain&>("adhesion_extruder_nr");
+    // EPlatformAdhesion adhesion_type = mesh_group_settings.get<EPlatformAdhesion>("adhesion_type");
+
+    const size_t extruder_nr = scene.current_mesh_group->settings.get<ExtruderTrain&>("adhesion_extruder_nr").extruder_nr;
+    const Settings& train_settings = scene.extruders[extruder_nr].settings;
+    EPlatformAdhesion adhesion_type = train_settings.get<EPlatformAdhesion>("adhesion_type");
 
     Polygons first_layer_outline;
     coord_t primary_line_count;
 
     if (adhesion_type == EPlatformAdhesion::SKIRT)
     {
-        primary_line_count = train.settings.get<size_t>("skirt_line_count");
+        primary_line_count = train_settings.get<size_t>("skirt_line_count");
         SkirtBrim::getFirstLayerOutline(storage, primary_line_count, true, first_layer_outline);
-        SkirtBrim::generate(storage, first_layer_outline, train.settings.get<coord_t>("skirt_gap"), primary_line_count);
+        SkirtBrim::generate(storage, first_layer_outline, train_settings.get<coord_t>("skirt_gap"), primary_line_count);
     }
 
     // Generate any brim for the prime tower, should happen _after_ any skirt, but _before_ any other brim (since FffGCodeWriter assumes that the outermost contour is last).
     if (adhesion_type != EPlatformAdhesion::RAFT && storage.primeTower.enabled && mesh_group_settings.get<bool>("prime_tower_brim_enable"))
     {
         constexpr bool dont_allow_helpers = false;
-        SkirtBrim::generate(storage, storage.primeTower.outer_poly, 0, train.settings.get<size_t>("brim_line_count"), dont_allow_helpers);
+        SkirtBrim::generate(storage, storage.primeTower.outer_poly, 0, train_settings.get<size_t>("brim_line_count"), dont_allow_helpers);
     }
 
     switch(adhesion_type)
@@ -1057,7 +1045,7 @@ void FffPolygonGenerator::processPlatformAdhesion(SliceDataStorage& storage)
         // Already done, because of prime-tower-brim & ordering, see above.
         break;
     case EPlatformAdhesion::BRIM:
-        primary_line_count = train.settings.get<size_t>("brim_line_count");
+        primary_line_count = train_settings.get<size_t>("brim_line_count");
         SkirtBrim::getFirstLayerOutline(storage, primary_line_count, false, first_layer_outline);
         SkirtBrim::generate(storage, first_layer_outline, 0, primary_line_count);
         break;
@@ -1073,14 +1061,13 @@ void FffPolygonGenerator::processPlatformAdhesion(SliceDataStorage& storage)
     }
 
     // Also apply maximum_[deviation|resolution] to skirt/brim.
-    const coord_t line_segment_resolution = train.settings.get<coord_t>("meshfix_maximum_resolution");
-    const coord_t line_segment_deviation = train.settings.get<coord_t>("meshfix_maximum_deviation");
+    const coord_t line_segment_resolution = train_settings.get<coord_t>("meshfix_maximum_resolution");
+    const coord_t line_segment_deviation = train_settings.get<coord_t>("meshfix_maximum_deviation");
     for (Polygons& polygons : storage.skirt_brim)
     {
         polygons.simplify(line_segment_resolution, line_segment_deviation);
     }
 }
-
 
 void FffPolygonGenerator::processFuzzyWalls(SliceMeshStorage& mesh)
 {
@@ -1092,6 +1079,7 @@ void FffPolygonGenerator::processFuzzyWalls(SliceMeshStorage& mesh)
     const coord_t avg_dist_between_points = mesh.settings.get<coord_t>("magic_fuzzy_skin_point_dist");
     const coord_t min_dist_between_points = avg_dist_between_points * 3 / 4; // hardcoded: the point distance may vary between 3/4 and 5/4 the supplied value
     const coord_t range_random_point_dist = avg_dist_between_points / 2;
+
     unsigned int start_layer_nr = (mesh.settings.get<EPlatformAdhesion>("adhesion_type") == EPlatformAdhesion::BRIM)? 1 : 0; // don't make fuzzy skin on first layer if there's a brim
     for (unsigned int layer_nr = start_layer_nr; layer_nr < mesh.layers.size(); layer_nr++)
     {

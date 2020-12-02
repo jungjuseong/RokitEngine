@@ -244,7 +244,7 @@ private:
      * 
      * \param[in,out] storage where the slice data is stored.
      */
-    void processRaft(const SliceDataStorage& storage);
+    void processRaft(const SliceDataStorage& storage, const Settings& train_settings);
 
     /*!
      * Convert the polygon data of a layer into a layer plan on the FffGcodeWriter::layer_plan_buffer
@@ -257,7 +257,7 @@ private:
      * \param total_layers The total number of layers.
      * \return The layer plans
      */
-    LayerPlan& processLayer(const SliceDataStorage& storage, LayerIndex layer_nr, const size_t total_layers) const;
+    LayerPlan& processLayer(const SliceDataStorage& storage, LayerIndex layer_nr, const size_t total_layers);
 
     /*!
      * This function checks whether prime blob should happen for any extruder on the first layer.
