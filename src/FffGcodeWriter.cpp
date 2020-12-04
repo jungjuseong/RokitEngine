@@ -833,7 +833,7 @@ LayerPlan& FffGcodeWriter::processLayer(const SliceDataStorage& storage, LayerIn
     const bool has_raft = train_settings.get<EPlatformAdhesion>("adhesion_type") == EPlatformAdhesion::RAFT;
     // const bool has_raft = (mesh_group_settings.get<EPlatformAdhesion>("adhesion_type") == EPlatformAdhesion::RAFT);
 
-    gcode.writeComment("processLayer::extruder_nr: " + std::to_string(extruder_nr));
+    // gcode.writeComment("processLayer::extruder_nr: " + std::to_string(extruder_nr));
 
     coord_t layer_thickness = mesh_group_settings.get<coord_t>("layer_height");
     coord_t z;
