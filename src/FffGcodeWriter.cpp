@@ -1021,11 +1021,13 @@ void FffGcodeWriter::processSkirtBrim(const SliceDataStorage& storage, LayerPlan
     // INVIVO-4D6
     const Settings train_settings = Application::getInstance().current_slice->scene.extruders[extruder_nr].settings;
     const coord_t skirt_line_count = train_settings.get<size_t>("skirt_line_count"); 
-    if (train_settings.get<EPlatformAdhesion>("adhesion_type") == EPlatformAdhesion::NONE || skirt_line_count == 0) 
+    const bool has_none = (train_settings.get<EPlatformAdhesion>("adhesion_type") == EPlatformAdhesion::NONE);
+    const bool has_skirt = (train_settings.get<EPlatformAdhesion>("adhesion_type") == EPlatformAdhesion::SKIRT);
+
+    if (has_none || (has_skirt && skirt_line_count == 0)) 
     {
         return;
     }
-
     // Start brim close to the prime location
     Point start_close_to;
     if (train_settings.get<bool>("prime_blob_enable"))

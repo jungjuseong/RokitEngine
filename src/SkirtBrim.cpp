@@ -225,8 +225,10 @@ void SkirtBrim::generate(SliceDataStorage& storage, Polygons first_layer_outline
             if (extruder_nr == adhesion_extruder_nr || !extruder_is_used[extruder_nr])
             {
                 continue;
-            }
-            if (train_settings.get<EPlatformAdhesion>("adhesion_type") == EPlatformAdhesion::NONE || skirt_line_count == 0) 
+            }                
+            const bool has_none = (train_settings.get<EPlatformAdhesion>("adhesion_type") == EPlatformAdhesion::NONE);
+            const bool has_skirt = (train_settings.get<EPlatformAdhesion>("adhesion_type") == EPlatformAdhesion::SKIRT);
+            if (has_none || (has_skirt && skirt_line_count == 0))
             {
                 //ExtruderTrain& adhesion_train = mesh_group_settings.get<ExtruderTrain&>("adhesion_extruder_nr");
                 continue;
