@@ -85,8 +85,6 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage, TimeKeeper& time_keep
     const Settings& train_settings = Application::getInstance().current_slice->scene.extruders[start_extruder_nr].settings;
     const std::string start_nozzle = train_settings.get<std::string>("machine_nozzle_id");    
 
-    gcode.writeComment("writeGCode::extruder_nr: " + std::to_string(start_extruder_nr));
-
     { // calculate the mesh order for each extruder
         const size_t extruder_count = Application::getInstance().current_slice->scene.extruders.size();
         mesh_order_per_extruder.clear(); // Might be not empty in case of sequential printing. 
@@ -110,8 +108,6 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage, TimeKeeper& time_keep
 
     if (has_raft)
     {
-        gcode.writeComment("adhesion_type: raft");
-
         processRaft(storage, train_settings);
         // process filler layers to fill the airgap with helper object (support etc) so that they stick better to the raft.
         // only process the filler layers if there is anything to print in them.
@@ -356,11 +352,9 @@ unsigned int FffGcodeWriter::getStartExtruder(const SliceDataStorage& storage)
     // INVIVO-4D6
     const Settings& train_settings = scene.extruders[extruder_nr].settings;
     // if (mesh_group_settings.get<EPlatformAdhesion>("adhesion_type") == EPlatformAdhesion::NONE)
-    gcode.writeComment("extruder_nr: " + std::to_string(extruder_nr));
 
     if (train_settings.get<EPlatformAdhesion>("adhesion_type") == EPlatformAdhesion::NONE)
     {
-        gcode.writeComment("adhesion_type: none");
         if ((mesh_group_settings.get<bool>("support_enable") || mesh_group_settings.get<bool>("support_tree_enable")) && mesh_group_settings.get<bool>("support_brim_enable"))
         {
             extruder_nr = mesh_group_settings.get<ExtruderTrain&>("support_infill_extruder_nr").extruder_nr;
@@ -370,7 +364,7 @@ unsigned int FffGcodeWriter::getStartExtruder(const SliceDataStorage& storage)
             std::vector<bool> extruder_is_used = storage.getExtrudersUsed();
             for (size_t extruder_nr = 0; extruder_nr < extruder_is_used.size(); extruder_nr++)
             {
-                extruder_nr = extruder_nr;
+                // extruder_nr = extruder_nr;
                 if (extruder_is_used[extruder_nr])
                 {
                     break;
@@ -631,8 +625,6 @@ void FffGcodeWriter::processRaft(const SliceDataStorage& storage, const Settings
     size_t extruder_nr = train_settings.get<ExtruderTrain&>("adhesion_extruder_nr").extruder_nr;
     const ExtruderTrain& adhesion_train = Application::getInstance().current_slice->scene.extruders[extruder_nr];
 
-    gcode.writeComment("processRaft::extruder_nr: " + std::to_string(extruder_nr));
-
     coord_t z = 0;
     const LayerIndex initial_raft_layer_nr = -Raft::getTotalExtraLayers();
 
@@ -830,10 +822,8 @@ LayerPlan& FffGcodeWriter::processLayer(const SliceDataStorage& storage, LayerIn
     // INVIVO-4D6
     size_t extruder_nr = mesh_group_settings.get<ExtruderTrain&>("adhesion_extruder_nr").extruder_nr;
     const Settings train_settings = Application::getInstance().current_slice->scene.extruders[extruder_nr].settings;
-    const bool has_raft = train_settings.get<EPlatformAdhesion>("adhesion_type") == EPlatformAdhesion::RAFT;
-    // const bool has_raft = (mesh_group_settings.get<EPlatformAdhesion>("adhesion_type") == EPlatformAdhesion::RAFT);
-
-    // gcode.writeComment("processLayer::extruder_nr: " + std::to_string(extruder_nr));
+    const EPlatformAdhesion adhesion_type = train_settings.get<EPlatformAdhesion>("adhesion_type");
+    // const EPlatformAdhesion adhesion_type = (mesh_group_settings.get<EPlatformAdhesion>("adhesion_type");
 
     coord_t layer_thickness = mesh_group_settings.get<coord_t>("layer_height");
     coord_t z;
@@ -854,10 +844,8 @@ LayerPlan& FffGcodeWriter::processLayer(const SliceDataStorage& storage, LayerIn
         for (const SliceMeshStorage& mesh : storage.meshes)
         {
             if (layer_nr >= static_cast<int>(mesh.layers.size())
-                || mesh.settings.get<bool>("support_mesh")
-                || mesh.settings.get<bool>("anti_overhang_mesh")
-                || mesh.settings.get<bool>("cutting_mesh")
-                || mesh.settings.get<bool>("infill_mesh"))
+                || mesh.settings.get<bool>("support_mesh") || mesh.settings.get<bool>("anti_overhang_mesh")
+                || mesh.settings.get<bool>("cutting_mesh") || mesh.settings.get<bool>("infill_mesh"))
             {
                 continue;
             }
@@ -868,7 +856,7 @@ LayerPlan& FffGcodeWriter::processLayer(const SliceDataStorage& storage, LayerIn
 
         if (layer_nr == 0)
         {
-            if (has_raft)            
+            if (adhesion_type == EPlatformAdhesion::RAFT)            
             {
                 include_helper_parts = false;
             }
@@ -885,7 +873,6 @@ LayerPlan& FffGcodeWriter::processLayer(const SliceDataStorage& storage, LayerIn
         if (extruder_is_used[extruder_nr])
         {
             const ExtruderTrain& extruder = scene.extruders[extruder_nr];
-
             if (extruder.settings.get<bool>("travel_avoid_other_parts"))
             {
                 avoid_distance = std::max<u_int>(avoid_distance, extruder.settings.get<coord_t>("travel_avoid_distance"));
@@ -906,10 +893,8 @@ LayerPlan& FffGcodeWriter::processLayer(const SliceDataStorage& storage, LayerIn
     const coord_t comb_offset_from_outlines = max_inner_wall_width * 2;
 
     assert(static_cast<LayerIndex>(extruder_order_per_layer_negative_layers.size()) + layer_nr >= 0 && "Layer numbers shouldn't get more negative than there are raft/filler layers");
-    const std::vector<size_t>& extruder_order =
-        (layer_nr < 0) ?
-        extruder_order_per_layer_negative_layers[extruder_order_per_layer_negative_layers.size() + layer_nr]
-        :
+    const std::vector<size_t>& extruder_order = (layer_nr < 0) ?
+        extruder_order_per_layer_negative_layers[extruder_order_per_layer_negative_layers.size() + layer_nr] :
         extruder_order_per_layer[layer_nr];
 
     const coord_t first_outer_wall_line_width = scene.extruders[extruder_order.front()].settings.get<coord_t>("wall_line_width_0");
@@ -2937,12 +2922,6 @@ void FffGcodeWriter::finalize()
     }
 
     gcode.writeComment("End of Gcode");
-    /*
-    the profile string below can be executed since the M25 doesn't end the gcode on an UMO and when printing via USB.
-    gcode.writeCode("M25 ;Stop reading from this point on.");
-    gcode.writeComment("Cura profile string:");
-    gcode.writeComment(FffProcessor::getInstance()->getAllLocalSettingsString() + FffProcessor::getInstance()->getProfileString());
-    */
 }
 
 
