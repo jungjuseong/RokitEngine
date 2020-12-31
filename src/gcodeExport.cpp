@@ -895,7 +895,7 @@ void GCodeExport::writeUnretractionAndPrime()
     }
     extruder_attr[current_extruder].prime_volume = 0.0;
     
-    if (getCurrentExtrudedVolume() > 10000.0) //According to https://github.com/Ultimaker/OrganRegenEngine/issues/14 having more then 21m of extrusion causes inaccuracies. So reset it every 10m, just to be sure.
+    if (getCurrentExtrudedVolume() > 10000.0) //According to https://github.com/Ultimaker/CuraEngine/issues/14 having more then 21m of extrusion causes inaccuracies. So reset it every 10m, just to be sure.
     {
         resetExtrusionValue();
     }
@@ -912,7 +912,9 @@ void GCodeExport::writeRetraction(const RetractionConfig& config, bool force, bo
     double old_retraction_e_amount = extr_attr.retraction_e_amount_current;
     double new_retraction_e_amount = mmToE(config.distance);
     double retraction_diff_e_amount = old_retraction_e_amount - new_retraction_e_amount;
-    if (std::abs(retraction_diff_e_amount) < 0.000001)
+
+    //if (std::abs(retraction_diff_e_amount) < 0.0000001)
+    if (std::abs(retraction_diff_e_amount) < 0.0)
     {
         return;
     }
@@ -930,6 +932,7 @@ void GCodeExport::writeRetraction(const RetractionConfig& config, bool force, bo
         {
             return;
         }
+
         if (!force && extruded_volume_at_previous_n_retractions.size() == config.retraction_count_max
             && current_extruded_volume < extruded_volume_at_previous_n_retractions.back() + config.retraction_extrusion_window * extr_attr.filament_area) 
         {
@@ -953,14 +956,16 @@ void GCodeExport::writeRetraction(const RetractionConfig& config, bool force, bo
     {
         if (nozzle.compare(0,3,"Ext") == 0)
         {
-            *output_stream << "G1 F" << PrecisionedDouble{1, speed} << " E" << PrecisionedDouble{5, output_e};
+            *output_stream << "G1 F" << PrecisionedDouble{1, speed} << " E" << PrecisionedDouble{5, output_e};        
+            *output_stream << " ;(Retraction for switching extruder)" << new_line;
         }
         else
         {
             *output_stream << "M301";
+            *output_stream << " ;(Retraction)" << new_line;
             is_traveling = 0;
         }
-        *output_stream << " ;(Retraction)" << new_line;
+
     }
     currentSpeed = speed;
     estimateCalculator.plan(TimeEstimateCalculator::Position(INT2MM(currentPosition.x), INT2MM(currentPosition.y), INT2MM(currentPosition.z), eToMm(current_e_value)), currentSpeed, PrintFeatureType::MoveRetraction);
@@ -1004,7 +1009,7 @@ void GCodeExport::writeZhopEnd(Velocity speed/*= 0*/)
     }
 }
 
-void GCodeExport::startExtruder(const size_t new_extruder, const bool from_mesh)
+void GCodeExport::startExtruder(const size_t new_extruder, const bool from_mesh, const RetractionConfig& retraction_config_old_extruder)
 {
     extruder_attr[new_extruder].is_used = true;
 
@@ -1033,12 +1038,12 @@ void GCodeExport::startExtruder(const size_t new_extruder, const bool from_mesh)
         {"96", {"-31.50","49.50"}}
     };
     
-    const bool is_wellplate = (dish_type.substr(0,10).compare("Well Plate") == 0);
+    const bool isWellplate = (dish_type.substr(0,10).compare("Well Plate") == 0);
 
     if (from_mesh && has_first_extruder_setting == false) 
     {
         // Add HOPPING code when dish type is the WellPlate and tool is the Dispenser
-        if (is_wellplate) 
+        if (isWellplate) 
         {
             if (new_extruder == 0)
                 return;
@@ -1089,8 +1094,13 @@ void GCodeExport::startExtruder(const size_t new_extruder, const bool from_mesh)
     if (has_first_extruder_setting && new_extruder != current_extruder) // wouldn't be the case on the very first extruder start if it's extruder 0
     {
         if (is_traveling == 0)
-        {
+        {            
+            constexpr bool force = true;
+            constexpr bool extruder_switch = true;
+            writeRetraction(retraction_config_old_extruder, force, extruder_switch);
+
             *output_stream << "M330" << new_line;
+
             is_traveling = 1;
         }
         *output_stream << ";TOOL_SETUP:" << new_nozzle.c_str() << " - " << new_extruder << new_line;;
@@ -1191,7 +1201,7 @@ void GCodeExport::switchExtruder(size_t new_extruder, const RetractionConfig& re
         }
     }
 
-    startExtruder(new_extruder, false);
+    startExtruder(new_extruder, false, retraction_config_old_extruder);
 }
 
 void GCodeExport::writeCode(const char* str)

@@ -158,26 +158,16 @@ void Wireframe2gcode::writeGCode()
                         gcode.writeExtrusion(segment.to, speedFlat, extrusion_mm3_per_mm_flat, PrintFeatureType::Skin);
                         gcode.writeDelay(flat_delay);
                     }
-                });
-        
-     
-        
-    }
-    
-    gcode.setZ(maxObjectHeight);
-    
-    gcode.writeRetraction(standard_retraction_config);
-    
-    
-    gcode.updateTotalPrintTime();
-    
-    gcode.writeDelay(0.3);
-    
+                });        
+    }    
+    gcode.setZ(maxObjectHeight);    
+    gcode.writeRetraction(standard_retraction_config);    
+    gcode.updateTotalPrintTime();    
+    gcode.writeDelay(0.3);    
     gcode.writeFanCommand(0);
 
     finalize();
 }
-
     
 void Wireframe2gcode::go_down(WeaveConnectionPart& part, unsigned int segment_idx)
 {
@@ -472,9 +462,6 @@ void Wireframe2gcode::writeFill(std::vector<WeaveRoofPart>& infill_insets, Polyg
     }
 }
 
-
-
-
 void Wireframe2gcode::writeMoveWithRetract(Point3 to)
 {
     if ((gcode.getPosition() - to).vSize2() >= nozzle_top_diameter * nozzle_top_diameter * 2 * 2)
@@ -617,14 +604,13 @@ void Wireframe2gcode::processStartingCode()
     { // initialize extruder trains
         gcode.writeCode("T0"); // Toolhead already assumed to be at T0, but writing it just to be safe...
         Application::getInstance().communication->sendCurrentPosition(gcode.getPositionXY());
-        gcode.startExtruder(start_extruder_nr, false);
+        gcode.startExtruder(start_extruder_nr, false, standard_retraction_config);
         constexpr bool wait = true;
         gcode.writeTemperatureCommand(start_extruder_nr, scene_settings.get<Temperature>("material_print_temperature"), wait);
         gcode.writePrimeTrain(scene_settings.get<Velocity>("speed_travel"));
         gcode.writeRetraction(standard_retraction_config);
     }
 }
-
 
 void Wireframe2gcode::processSkirt()
 {

@@ -454,7 +454,7 @@ public:
      * 
      * \param new_extruder The extruder to start with
      */
-    void startExtruder(const size_t new_extruder, const bool from_mesh);
+    void startExtruder(const size_t new_extruder, const bool from_mesh, const RetractionConfig& retraction_config);
 
     /*!
      * Switch to the new_extruder: 
