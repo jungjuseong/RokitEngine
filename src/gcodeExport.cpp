@@ -898,8 +898,7 @@ void GCodeExport::writeRetraction(const RetractionConfig& config, bool force, bo
     if (has_first_extruder_setting) 
     {
         if (nozzle.compare(0,3,"Ext") == 0)        
-            *output_stream << "G1 F" << PrecisionedDouble{1, speed} << " E" << PrecisionedDouble{5, output_e} << " ;(Retraction)" << new_line;
-        
+            *output_stream << "G1 F" << PrecisionedDouble{1, speed} << " E" << PrecisionedDouble{5, output_e} << " ;(Retraction)" << new_line;        
         else
         {
             //*output_stream << "M301";
@@ -1016,7 +1015,7 @@ void GCodeExport::outputBodyCode(const size_t extruder_nr, const std::string noz
 void GCodeExport::outputToolSetupCode(const size_t extruder_nr, const std::string nozzle)
 {
         if (is_traveling == 0)
-        {
+        {            
             *output_stream << "M330" << new_line;
             is_traveling = 1;
         }

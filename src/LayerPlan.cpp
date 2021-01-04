@@ -1484,7 +1484,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
         const RetractionConfig& retraction_config = storage.retraction_config_per_extruder[extruder_plan.extruder_nr];
         coord_t z_hop_height = retraction_config.zHop;
 
-        gcode.startExtruder(extruder_plan.extruder_nr, true);
+        gcode.startExtruder(extruder_plan.extruder_nr, true, retraction_config);
 
         if (extruder_nr != extruder_plan.extruder_nr)
         {
@@ -1631,17 +1631,14 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
             //This seems to be the best location to place this, but still not ideal.
             if (path.mesh_id != current_mesh)
             {
-                gcode.startExtruder(extruder_nr, true);
-                
+                gcode.startExtruder(extruder_nr, true);                
                 current_mesh = path.mesh_id;
 
                 std::stringstream ss;
-                // ss.imbue(std::locale("kor"));
-
-                ss << "MESH:" << current_mesh << "한글깨짐";
+                ss << "MESH:" << current_mesh;
                 gcode.writeComment(ss.str());
-
             }
+
             if (path.config->isTravelPath())
             { // early comp for travel paths, which are handled more simply
                 if (!path.perform_z_hop && final_travel_z != z && extruder_plan_idx == (extruder_plans.size() - 1) && path_idx == (paths.size() - 1))
@@ -1655,9 +1652,8 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
                     gcode.setZ(final_travel_z);
                 }
                 for(unsigned int point_idx = 0; point_idx < path.points.size(); point_idx++)
-                {
                     gcode.writeTravel(path.points[point_idx], speed);
-                }
+                
                 continue;
             }
 

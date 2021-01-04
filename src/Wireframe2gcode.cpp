@@ -176,7 +176,6 @@ void Wireframe2gcode::writeGCode()
 
     finalize();
 }
-
     
 void Wireframe2gcode::go_down(WeaveConnectionPart& part, unsigned int segment_idx)
 {
@@ -624,7 +623,6 @@ void Wireframe2gcode::processStartingCode()
         gcode.writeRetraction(standard_retraction_config);
     }
 }
-
 
 void Wireframe2gcode::processSkirt()
 {
