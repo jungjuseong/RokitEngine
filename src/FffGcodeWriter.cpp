@@ -580,7 +580,7 @@ void FffGcodeWriter::processStartingCode(const SliceDataStorage& storage, const 
     }
 
     Application::getInstance().communication->sendCurrentPosition(gcode.getPositionXY());
-    //gcode.startExtruder(start_extruder_nr, false);
+    gcode.startExtruder(start_extruder_nr, false);
 
     if (mesh_group_settings.get<bool>("relative_extrusion"))
     {

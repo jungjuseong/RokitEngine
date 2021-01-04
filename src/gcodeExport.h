@@ -159,6 +159,9 @@ private:
     bool is_traveling;
     bool has_first_extruder_setting;
     
+    void outputBodyCode(const size_t extruder_nr, std::string nozzle);
+    void outputToolSetupCode(const size_t extruder_nr, const std::string nozzle);
+    
 protected:
     /*!
      * Convert an E value to a value in mm (if it wasn't already in mm) for the current extruder.
@@ -453,8 +456,9 @@ public:
      * - write extruder start gcode
      * 
      * \param new_extruder The extruder to start with
+     * \param is_from_mesh this procedure called from mesh
      */
-    void startExtruder(const size_t new_extruder, const bool from_mesh);
+    void startExtruder(const size_t new_extruder, const bool is_from_mesh);
 
     /*!
      * Switch to the new_extruder: 

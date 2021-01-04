@@ -168,7 +168,6 @@ void Wireframe2gcode::writeGCode()
     
     gcode.writeRetraction(standard_retraction_config);
     
-    
     gcode.updateTotalPrintTime();
     
     gcode.writeDelay(0.3);
@@ -472,26 +471,25 @@ void Wireframe2gcode::writeFill(std::vector<WeaveRoofPart>& infill_insets, Polyg
     }
 }
 
-
-
-
 void Wireframe2gcode::writeMoveWithRetract(Point3 to)
 {
     if ((gcode.getPosition() - to).vSize2() >= nozzle_top_diameter * nozzle_top_diameter * 2 * 2)
-        gcode.writeRetraction(standard_retraction_config);
+    {
+       gcode.writeRetraction(standard_retraction_config);
+    }
     gcode.writeTravel(to, moveSpeed);
 }
 
 void Wireframe2gcode::writeMoveWithRetract(Point to)
 {
-    if (vSize2(gcode.getPositionXY() - to) >= nozzle_top_diameter * nozzle_top_diameter * 2 * 2)
+    if (vSize2(gcode.getPositionXY() - to) >= nozzle_top_diameter * nozzle_top_diameter * 2 * 2) 
+    {
         gcode.writeRetraction(standard_retraction_config);
+    }
     gcode.writeTravel(to, moveSpeed);
 }
 
-Wireframe2gcode::Wireframe2gcode(Weaver& weaver, GCodeExport& gcode) 
-: gcode(gcode)
-, wireFrame(weaver.wireFrame)
+Wireframe2gcode::Wireframe2gcode(Weaver& weaver, GCodeExport& gcode) : gcode(gcode), wireFrame(weaver.wireFrame)
 {
     const Settings& scene_settings = Application::getInstance().current_slice->scene.settings;
     initial_layer_thickness = scene_settings.get<coord_t>("layer_height_0");
@@ -617,7 +615,9 @@ void Wireframe2gcode::processStartingCode()
     { // initialize extruder trains
         gcode.writeCode("T0"); // Toolhead already assumed to be at T0, but writing it just to be safe...
         Application::getInstance().communication->sendCurrentPosition(gcode.getPositionXY());
+
         gcode.startExtruder(start_extruder_nr, false);
+
         constexpr bool wait = true;
         gcode.writeTemperatureCommand(start_extruder_nr, scene_settings.get<Temperature>("material_print_temperature"), wait);
         gcode.writePrimeTrain(scene_settings.get<Velocity>("speed_travel"));

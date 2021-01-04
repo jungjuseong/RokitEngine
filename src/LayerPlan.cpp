@@ -2,6 +2,7 @@
 //OrganRegenEngine is released under the terms of the AGPLv3 or higher.
 
 #include <cstring>
+#include <locale>
 
 #include "Application.h" //To communicate layer view data.
 #include "ExtruderTrain.h"
@@ -1630,11 +1631,16 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
             //This seems to be the best location to place this, but still not ideal.
             if (path.mesh_id != current_mesh)
             {
-                //gcode.startExtruder(extruder_nr, true);
+                gcode.startExtruder(extruder_nr, true);
+                
                 current_mesh = path.mesh_id;
+
                 std::stringstream ss;
-                ss << "MESH:" << current_mesh;
+                // ss.imbue(std::locale("kor"));
+
+                ss << "MESH:" << current_mesh << "한글깨짐";
                 gcode.writeComment(ss.str());
+
             }
             if (path.config->isTravelPath())
             { // early comp for travel paths, which are handled more simply
