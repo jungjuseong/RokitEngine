@@ -179,7 +179,8 @@ std::string GCodeExport::getFileHeader(const std::vector<bool>& extruder_is_used
         prefix << ";GENERATOR.NAME:Cura_SteamEngine" << new_line;
         prefix << ";GENERATOR.VERSION:" << VERSION << new_line;
         prefix << ";GENERATOR.BUILD_DATE:" << Date::getDate().toStringDashed() << new_line;
-        prefix << ";TARGET_MACHINE.NAME:" << transliterate(machine_name) << new_line;
+        // prefix << ";TARGET_MACHINE.NAME:" << transliterate(machine_name) << new_line;
+        prefix << ";TARGET_MACHINE.NAME:" << machine_name << new_line;
 
         for (size_t extr_nr = 0; extr_nr < extruder_count; extr_nr++)
         {
@@ -457,7 +458,7 @@ void GCodeExport::writeExtrudersUsed(const std::vector<bool> extruder_is_used)
 
 void GCodeExport::writeComment(const std::string& unsanitized_comment)
 {
-    const std::string comment = transliterate(unsanitized_comment);
+    const std::string comment = unsanitized_comment; //transliterate(unsanitized_comment);
 
     *output_stream << ";";
     for (unsigned int i = 0; i < comment.length(); i++)
@@ -1096,7 +1097,7 @@ void GCodeExport::switchExtruder(size_t new_extruder, const RetractionConfig& re
     const Settings& old_extruder_settings = Application::getInstance().current_slice->scene.extruders[current_extruder].settings;
     const bool retraction_enabled = old_extruder_settings.get<bool>("retraction_enable");
 
-    // writeComment("switchExtruder");
+    writeComment("switchExtruder");
     // writeComment(retraction_enabled ? "retraction_enabled" : "retraction_disabled");
 
     if (current_extruder == new_extruder)

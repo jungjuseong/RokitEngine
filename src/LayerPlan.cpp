@@ -175,7 +175,7 @@ Polygons LayerPlan::computeCombBoundaryInside(const size_t max_inset)
                 {
                     const size_t num_insets = part.insets.size();
                     Polygons outer = part.outline; // outer boundary of wall combing region
-                    coord_t outer_to_outline_dist = 0; // distance from outer to the part's outline
+                    coord_t outer_to_outline_dist = 0; // distance from outer to the part's outlinef
 
                     if (num_insets > 1 && part.insets[1].size() == part.outline.size())
                     {
@@ -1484,13 +1484,12 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
         const RetractionConfig& retraction_config = storage.retraction_config_per_extruder[extruder_plan.extruder_nr];
         coord_t z_hop_height = retraction_config.zHop;
 
-        gcode.startExtruder(extruder_plan.extruder_nr, true, retraction_config);
+        gcode.startExtruder(extruder_plan.extruder_nr, true);
 
         if (extruder_nr != extruder_plan.extruder_nr)
         {
             int prev_extruder = extruder_nr;
             extruder_nr = extruder_plan.extruder_nr;
-
 
             gcode.ResetLastEValueAfterWipe(prev_extruder);
 
@@ -1634,9 +1633,9 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
                 gcode.startExtruder(extruder_nr, true);                
                 current_mesh = path.mesh_id;
 
-                std::stringstream ss;
-                ss << "MESH:" << current_mesh;
-                gcode.writeComment(ss.str());
+                std::stringstream wss;
+                wss << "MESH:" << current_mesh;
+                gcode.writeComment(wss.str());
             }
 
             if (path.config->isTravelPath())

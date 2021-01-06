@@ -141,7 +141,7 @@ Polygons& SliceLayer::getInnermostWalls(const size_t max_inset, const SliceMeshS
                 // NOTE - expanding the 2nd wall by an extra factor of 2 is needed to successfully merge tiny 2nd wall outlines with sharp corners into the outer wall
                 // the effect of the extra expansion is that the boundary will hug the outline of the 2nd wall regions rather than its centre line
                 result.add(part.insets[1].offset(2*half_line_width_x).unionPolygons(outer_where_there_are_no_inner_insets.offset(half_line_width_0))
-                    .offset(-std::min(half_line_width_0, half_line_width_x)).intersection(outer));
+                    .offset(-std::min<u_int>(half_line_width_0, half_line_width_x)).intersection(outer));
             }
             else
             {
@@ -436,13 +436,13 @@ Polygons SliceDataStorage::getLayerOutlines(const LayerIndex layer_nr, const boo
                 {
                     total = total.unionPolygons(layer.openPolyLines.offsetPolyLine(100));
                 }
-                maximum_resolution = std::min(maximum_resolution, mesh.settings.get<coord_t>("meshfix_maximum_resolution"));
-                maximum_deviation = std::min(maximum_deviation, mesh.settings.get<coord_t>("meshfix_maximum_deviation"));
+                maximum_resolution = std::min<u_int>(maximum_resolution, mesh.settings.get<coord_t>("meshfix_maximum_resolution"));
+                maximum_deviation = std::min<u_int>(maximum_deviation, mesh.settings.get<coord_t>("meshfix_maximum_deviation"));
             }
         }
         if (include_support)
         {
-            const SupportLayer& support_layer = support.supportLayers[std::max(LayerIndex(0), layer_nr)];
+            const SupportLayer& support_layer = support.supportLayers[std::max<u_int>(LayerIndex(0), layer_nr)];
             if (support.generated) 
             {
                 for (const SupportInfillPart& support_infill_part : support_layer.support_infill_parts)
