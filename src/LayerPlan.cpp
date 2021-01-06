@@ -1484,7 +1484,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
         const RetractionConfig& retraction_config = storage.retraction_config_per_extruder[extruder_plan.extruder_nr];
         coord_t z_hop_height = retraction_config.zHop;
 
-        gcode.startExtruder(extruder_plan.extruder_nr, true);
+        //-> gcode.startExtruder(extruder_plan.extruder_nr, true);
 
         if (extruder_nr != extruder_plan.extruder_nr)
         {
@@ -1543,6 +1543,11 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
                 }
             }
         }
+
+
+        gcode.startExtruder(extruder_plan.extruder_nr, true);
+
+
         gcode.writeFanCommand(extruder_plan.getFanSpeed());
         std::vector<GCodePath>& paths = extruder_plan.paths;
 

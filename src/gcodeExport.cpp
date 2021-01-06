@@ -1097,9 +1097,6 @@ void GCodeExport::switchExtruder(size_t new_extruder, const RetractionConfig& re
     const Settings& old_extruder_settings = Application::getInstance().current_slice->scene.extruders[current_extruder].settings;
     const bool retraction_enabled = old_extruder_settings.get<bool>("retraction_enable");
 
-    writeComment("switchExtruder");
-    // writeComment(retraction_enabled ? "retraction_enabled" : "retraction_disabled");
-
     if (current_extruder == new_extruder)
     {
         return;
@@ -1109,6 +1106,7 @@ void GCodeExport::switchExtruder(size_t new_extruder, const RetractionConfig& re
     {
         constexpr bool force = true;
         constexpr bool extruder_switch = true;
+        writeComment("switchExtruder");
         writeRetraction(retraction_config_old_extruder, force, extruder_switch);
     }
 
