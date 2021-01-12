@@ -1485,7 +1485,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
         const RetractionConfig& retraction_config = storage.retraction_config_per_extruder[extruder_plan.extruder_nr];
         coord_t z_hop_height = retraction_config.zHop;
 
-        //-> gcode.startExtruder(extruder_plan.extruder_nr, true);
+        // gcode.startExtruder(extruder_plan.extruder_nr);
 
         if (extruder_nr != extruder_plan.extruder_nr)
         {
@@ -1544,10 +1544,8 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
                 }
             }
         }
-
-
-        gcode.startExtruder(extruder_plan.extruder_nr, true);
-
+        
+        gcode.startExtruder(extruder_plan.extruder_nr);
 
         gcode.writeFanCommand(extruder_plan.getFanSpeed());
         std::vector<GCodePath>& paths = extruder_plan.paths;
@@ -1629,14 +1627,13 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
             speed *= path.speed_factor;
 
             //Apply the extrusion speed factor if it's an extrusion move.
-            if (!path.config->isTravelPath())
-            {
+            if (!path.config->isTravelPath())            
                 speed *= extruder_plan.getExtrudeSpeedFactor();
-            }
+            
             //This seems to be the best location to place this, but still not ideal.
             if (path.mesh_id != current_mesh)
             {
-                gcode.startExtruder(extruder_nr, true);                
+                gcode.startExtruder(extruder_nr);                
                 current_mesh = path.mesh_id;
 
                 std::stringstream wss;

@@ -68,7 +68,7 @@ GCodeExport::GCodeExport()
     total_bounding_box = AABB3D();
 
     is_traveling = 1;
-    has_first_extruder_setting = false;
+    first_extruder_setting_done = false;
 }
 
 GCodeExport::~GCodeExport()
@@ -537,10 +537,8 @@ void GCodeExport::writeLine(const char* line)
 
 void GCodeExport::writeExtrusionMode(bool set_relative_extrusion_mode)
 {
-    if (set_relative_extrusion_mode)
-    {
-        *output_stream << "M83 ;relative extrusion mode" << new_line;
-    }
+    if (set_relative_extrusion_mode)    
+        *output_stream << "M83 ;relative extrusion mode" << new_line;    
     else 
     {
         if (flavor != EGCodeFlavor::INVIVO4D6)
@@ -557,7 +555,7 @@ void GCodeExport::resetExtrusionValue()
     {
         ExtruderTrainAttributes& extr_attr = extruder_attr[current_extruder];
 
-        if (has_first_extruder_setting)
+        if (first_extruder_setting_done)
         {
             if (!relative_extrusion)        
                 *output_stream << "G92 " << extr_attr.extruderCharacter << "0" << new_line;
@@ -863,18 +861,18 @@ void GCodeExport::writeUnretractionAndPrime()
 void GCodeExport::writeRetraction(const RetractionConfig& config, bool force, bool extruder_switch)
 {
     const Settings& extruder_settings = Application::getInstance().current_slice->scene.extruders[current_extruder].settings;
-    const std::string nozzle_id = extruder_settings.get<std::string>("machine_nozzle_id").c_str();    
+    const std::string nozzle_id = extruder_settings.get<std::string>("machine_nozzle_id").c_str();
+    ExtruderTrainAttributes& extr_attr = extruder_attr[current_extruder];
+
     if (nozzle_id.compare(0,3,"Ext") == 0)
     {
-        ExtruderTrainAttributes& extr_attr = extruder_attr[current_extruder];
-
         double old_retraction_e_amount = extr_attr.retraction_e_amount_current;
         double new_retraction_e_amount = mmToE(config.distance);
         double retraction_diff_e_amount = old_retraction_e_amount - new_retraction_e_amount;
 
-        if (std::abs(retraction_diff_e_amount) < 0.00001) {
+        if (std::abs(retraction_diff_e_amount) < 0.00001)
             return;
-        }
+        
         { // handle retraction limitation
             double current_extruded_volume = getCurrentExtrudedVolume();
             std::deque<double>& extruded_volume_at_previous_n_retractions = extr_attr.extruded_volume_at_previous_n_retractions;
@@ -884,10 +882,8 @@ void GCodeExport::writeRetraction(const RetractionConfig& config, bool force, bo
                 // also the retraction_count_max could have changed between the last retraction and this
                 extruded_volume_at_previous_n_retractions.pop_back();
             }
-            if (!force && config.retraction_count_max <= 0) 
-            {       
-                return;
-            }
+            if (!force && config.retraction_count_max <= 0)               
+                return;            
             
             const size_t retraction_count = extruded_volume_at_previous_n_retractions.size();
             const double volume = extruded_volume_at_previous_n_retractions.back() + config.retraction_extrusion_window * extr_attr.filament_area;
@@ -905,12 +901,11 @@ void GCodeExport::writeRetraction(const RetractionConfig& config, bool force, bo
         current_e_value += retraction_diff_e_amount;
         const double output_e = (relative_extrusion)? retraction_diff_e_amount : current_e_value;
 
-        if (has_first_extruder_setting || force) 
-        {
+        if (first_extruder_setting_done || force)         
             *output_stream << "G1 F" << PrecisionedDouble{1,retraction_speed} << " E" << PrecisionedDouble{5,output_e} << " ;(Retraction)" << new_line;
             
-        }
         currentSpeed = retraction_speed;
+
         const double x_mm = INT2MM(currentPosition.x);
         const double y_mm = INT2MM(currentPosition.y);
         const double z_mm = INT2MM(currentPosition.z);
@@ -973,7 +968,7 @@ const std::map<std::string, StartPoint> JumpPosition = {
     {"96", {"-31.50","49.50"}}
 };
 
-void GCodeExport::outputBodyCode(const size_t extruder_nr, const std::string nozzle_id)
+void GCodeExport::outputBodyStartCode(const size_t extruder_nr, const std::string nozzle_id)
 {
     const Settings& scene_settings = Application::getInstance().current_slice->scene.settings;
     const std::string build_dish_type = scene_settings.get<std::string>("machine_build_dish_type");
@@ -1050,7 +1045,7 @@ void GCodeExport::outputToolSetupCode(const size_t extruder_nr, const std::strin
         *output_stream << ";END" << new_line;     
 }
 
-void GCodeExport::startExtruder(const size_t new_extruder, const bool is_from_mesh)
+void GCodeExport::startExtruder(const size_t new_extruder)
 {
     extruder_attr[new_extruder].is_used = true;
 
@@ -1060,17 +1055,15 @@ void GCodeExport::startExtruder(const size_t new_extruder, const bool is_from_me
     const ExtruderTrain& new_extruder_train = Application::getInstance().current_slice->scene.extruders[new_extruder];
     const std::string new_nozzle = new_extruder_train.settings.get<std::string>("machine_nozzle_id");    
 
-    if (is_from_mesh && !has_first_extruder_setting) 
+    if (!first_extruder_setting_done) 
     {
-        outputBodyCode(new_extruder, new_nozzle); 
+        outputBodyStartCode(new_extruder, new_nozzle); 
 
-        has_first_extruder_setting = true;
+        first_extruder_setting_done = true;
         current_extruder = new_extruder;
-        
-        return;
     }
 
-    if (has_first_extruder_setting && new_extruder != current_extruder) // wouldn't be the case on the very first extruder start if it's extruder 0
+    if (first_extruder_setting_done && new_extruder != current_extruder) // wouldn't be the case on the very first extruder start if it's extruder 0
     {
         outputToolSetupCode(new_extruder, new_nozzle);     
         current_extruder = new_extruder;
@@ -1091,7 +1084,6 @@ void GCodeExport::startExtruder(const size_t new_extruder, const bool is_from_me
         if (relative_extrusion)
             writeExtrusionMode(true); // restore relative extrusion mode
     }
-
     Application::getInstance().communication->setExtruderForSend(new_extruder_train);
     Application::getInstance().communication->sendCurrentPosition(getPositionXY());
 
@@ -1106,45 +1098,30 @@ void GCodeExport::switchExtruder(size_t new_extruder, const RetractionConfig& re
     const Settings& old_extruder_settings = Application::getInstance().current_slice->scene.extruders[current_extruder].settings;
     const bool retraction_enabled = old_extruder_settings.get<bool>("retraction_enable");
 
-    if (current_extruder == new_extruder)
-    {
+    if (current_extruder == new_extruder) 
         return;
-    }
 
     if (retraction_enabled)
-    {
-        constexpr bool force = true;
-        constexpr bool extruder_switch = true;
-        writeComment("switchExtruder");
-        writeRetraction(retraction_config_old_extruder, force, extruder_switch);
-    }
+        writeRetraction(retraction_config_old_extruder, true, true);    
 
-    if (perform_z_hop > 0)
-    {
+    if (perform_z_hop > 0)    
         writeZhopStart(perform_z_hop);
-    }
 
     resetExtrusionValue(); // zero the E value on the old extruder, so that the current_e_value is registered on the old extruder
 
     const std::string end_code = old_extruder_settings.get<std::string>("machine_extruder_end_code");
-
     if(!end_code.empty())
     {
-        if (relative_extrusion)
-        {
-            writeExtrusionMode(false); // ensure absolute extrusion mode is set before the end gcode
-        }
+        if (relative_extrusion)        
+            writeExtrusionMode(false); // ensure absolute extrusion mode is set before the end gcode        
 
         writeCode(end_code.c_str());
 
-        if (relative_extrusion)
-        {
-            writeExtrusionMode(true); // restore relative extrusion mode
-        }
+        if (relative_extrusion)        
+            writeExtrusionMode(true); // restore relative extrusion mode        
     }
 
-    const bool is_from_mesh = false;
-    startExtruder(new_extruder, is_from_mesh);
+    startExtruder(new_extruder);
 }
 
 void GCodeExport::writeCode(const char* str)

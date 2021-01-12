@@ -615,7 +615,7 @@ void Wireframe2gcode::processStartingCode()
         gcode.writeCode("T0"); // Toolhead already assumed to be at T0, but writing it just to be safe...
         Application::getInstance().communication->sendCurrentPosition(gcode.getPositionXY());
 
-        gcode.startExtruder(start_extruder_nr, false);
+        gcode.startExtruder(start_extruder_nr);
 
         constexpr bool wait = true;
         gcode.writeTemperatureCommand(start_extruder_nr, scene_settings.get<Temperature>("material_print_temperature"), wait);

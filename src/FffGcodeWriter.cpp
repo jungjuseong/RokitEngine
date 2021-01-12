@@ -580,12 +580,11 @@ void FffGcodeWriter::processStartingCode(const SliceDataStorage& storage, const 
     }
 
     Application::getInstance().communication->sendCurrentPosition(gcode.getPositionXY());
-    gcode.startExtruder(start_extruder_nr, false);
 
-    if (mesh_group_settings.get<bool>("relative_extrusion"))
-    {
-        gcode.writeExtrusionMode(true);
-    }
+    gcode.startExtruder(start_extruder_nr);
+
+    if (mesh_group_settings.get<bool>("relative_extrusion"))    
+        gcode.writeExtrusionMode(true);    
 
     if (mesh_group_settings.get<bool>("retraction_enable"))
     {
@@ -594,8 +593,7 @@ void FffGcodeWriter::processStartingCode(const SliceDataStorage& storage, const 
 
         // retract before first travel move
         gcode.writeRetraction(storage.retraction_config_per_extruder[start_extruder_nr]);
-    }
-    
+    }    
     gcode.setExtruderFanNumber(start_extruder_nr);
 }
 

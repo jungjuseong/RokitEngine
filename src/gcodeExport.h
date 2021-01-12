@@ -157,10 +157,10 @@ private:
     bool machine_heated_build_volume;  //!< does the machine have the ability to control/stabilize build-volume-temperature
 
     bool is_traveling;
-    bool has_first_extruder_setting;
+    bool first_extruder_setting_done;
     
-    void outputBodyCode(const size_t extruder_nr, std::string nozzle);
-    void outputToolSetupCode(const size_t extruder_nr, const std::string nozzle);
+    void outputBodyStartCode(const size_t extruder_nr, std::string nozzle_id);
+    void outputToolSetupCode(const size_t extruder_nr, const std::string nozzle_id);
     
 protected:
     /*!
@@ -458,7 +458,7 @@ public:
      * \param new_extruder The extruder to start with
      * \param is_from_mesh this procedure called from mesh
      */
-    void startExtruder(const size_t new_extruder, const bool is_from_mesh);
+    void startExtruder(const size_t new_extruder);
 
     /*!
      * Switch to the new_extruder: 
