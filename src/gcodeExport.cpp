@@ -804,7 +804,7 @@ void GCodeExport::writeFXYZE(const Velocity& speed, const int x, const int y, co
     if (e + current_e_offset != current_e_value)
     {
         const double output_e = (relative_extrusion)? e + current_e_offset - current_e_value : e + current_e_offset;
-        if (nozzle_id)
+        if (nozzle_id.compare(0,3,"Ext") == 0) 
         {
             *output_stream << " E" << PrecisionedDouble{5, output_e};
         }
