@@ -555,12 +555,12 @@ void GCodeExport::resetExtrusionValue()
     {
         ExtruderTrainAttributes& extr_attr = extruder_attr[current_extruder];
 
-        if (first_extruder_setting_done)
-        {
-            if (!relative_extrusion)        
-                *output_stream << "G92 " << extr_attr.extruderCharacter << "0" << new_line;
+        // if (first_extruder_setting_done)
+        // {
+        if (!relative_extrusion)        
+            *output_stream << "G92 " << extr_attr.extruderCharacter << "0" << new_line;
             
-        }
+        // }
         double current_extruded_volume = getCurrentExtrudedVolume();
         extr_attr.totalFilament += current_extruded_volume;
         for (double& extruded_volume_at_retraction : extr_attr.extruded_volume_at_previous_n_retractions)
@@ -887,10 +887,8 @@ void GCodeExport::writeRetraction(const RetractionConfig& config, bool force, bo
             
             const size_t retraction_count = extruded_volume_at_previous_n_retractions.size();
             const double volume = extruded_volume_at_previous_n_retractions.back() + config.retraction_extrusion_window * extr_attr.filament_area;
-            if (!force && (retraction_count == config.retraction_count_max) && current_extruded_volume < volume) 
-            {  
-                return;
-            }
+            if (!force && (retraction_count == config.retraction_count_max) && current_extruded_volume < volume)            
+                return;            
             
             extruded_volume_at_previous_n_retractions.push_front(current_extruded_volume);
             if (extruded_volume_at_previous_n_retractions.size() == config.retraction_count_max + 1)        
@@ -901,7 +899,7 @@ void GCodeExport::writeRetraction(const RetractionConfig& config, bool force, bo
         current_e_value += retraction_diff_e_amount;
         const double output_e = (relative_extrusion)? retraction_diff_e_amount : current_e_value;
 
-        if (first_extruder_setting_done || force)         
+        //if (first_extruder_setting_done || force)         
             *output_stream << "G1 F" << PrecisionedDouble{1,retraction_speed} << " E" << PrecisionedDouble{5,output_e} << " ;(Retraction)" << new_line;
             
         currentSpeed = retraction_speed;
@@ -1070,7 +1068,8 @@ void GCodeExport::startExtruder(const size_t new_extruder)
     }
 
     assert(getCurrentExtrudedVolume() == 0.0 && "Just after an extruder switch we haven't extruded anything yet!");
-    resetExtrusionValue(); // zero the E value on the new extruder, just to be sure
+    
+    // resetExtrusionValue(); // zero the E value on the new extruder, just to be sure
 
     const std::string extruder_start_code = new_extruder_train.settings.get<std::string>("machine_extruder_start_code");
 

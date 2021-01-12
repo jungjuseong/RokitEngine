@@ -571,6 +571,7 @@ void FffGcodeWriter::processStartingCode(const SliceDataStorage& storage, const 
     processInitialLayerTemperature(storage, start_extruder_nr);    
 
     const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
+    const Settings extruder_settings = Application::getInstance().current_slice->scene.extruders[start_extruder_nr].settings;
 
     gcode.writeExtrusionMode(false); // ensure absolute extrusion mode is set before the start gcode
     gcode.writeCode(mesh_group_settings.get<std::string>("machine_start_gcode").c_str());
@@ -581,20 +582,22 @@ void FffGcodeWriter::processStartingCode(const SliceDataStorage& storage, const 
 
     Application::getInstance().communication->sendCurrentPosition(gcode.getPositionXY());
 
-    gcode.startExtruder(start_extruder_nr);
+    //gcode.startExtruder(start_extruder_nr);
 
-    if (mesh_group_settings.get<bool>("relative_extrusion"))    
+    if (extruder_settings.get<bool>("relative_extrusion"))    
         gcode.writeExtrusionMode(true);    
 
-    if (mesh_group_settings.get<bool>("retraction_enable"))
+    if (extruder_settings.get<bool>("retraction_enable"))
     {
         // ensure extruder is zeroed
         gcode.resetExtrusionValue();
 
         // retract before first travel move
         gcode.writeRetraction(storage.retraction_config_per_extruder[start_extruder_nr]);
-    }    
-    gcode.setExtruderFanNumber(start_extruder_nr);
+    }
+    gcode.startExtruder(start_extruder_nr);
+    
+    // gcode.setExtruderFanNumber(start_extruder_nr);
 }
 
 void FffGcodeWriter::processNextMeshGroupCode(const SliceDataStorage& storage)
