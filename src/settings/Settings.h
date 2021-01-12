@@ -8,7 +8,7 @@
 #define VERSION "DEV"
 #endif
 
-#define MAX_EXTRUDERS 16
+#define MAX_EXTRUDERS 6
 
 //Maximum number of infill layers that can be combined into a single infill extrusion area.
 #define MAX_INFILL_COMBINE 8

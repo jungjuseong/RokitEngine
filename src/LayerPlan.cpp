@@ -379,6 +379,7 @@ GCodePath& LayerPlan::addTravel(const Point p, const bool force_retract)
 
     const bool is_first_travel_of_layer = !static_cast<bool>(last_planned_position);
     const bool retraction_enable = extruder->settings.get<bool>("retraction_enable");
+
     if (is_first_travel_of_layer)
     {
         bypass_combing = true; // first travel move is bogus; it is added after this and the previous layer have been planned in LayerPlanBuffer::addConnectingTravelMove
