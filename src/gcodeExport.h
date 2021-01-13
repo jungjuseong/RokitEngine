@@ -213,6 +213,8 @@ public:
     GCodeExport();
     ~GCodeExport();
 
+    const std::string getNozzleId(const size_t extruder_nr) const;
+
     /*
      * \brief Converts the g-code flavor to a string as it must be printed in
      * the g-code.
@@ -412,16 +414,6 @@ private:
      */
     void writeFXYZE(const Velocity& speed, const int x, const int y, const int z, const double e, const PrintFeatureType& feature);
 
-    /*!
-     * The writeTravel and/or writeExtrusion when flavor == BFB
-     * \param x build plate x
-     * \param y build plate y
-     * \param z build plate z
-     * \param speed movement speed
-     * \param extrusion_mm3_per_mm flow
-     * \param feature print feature to track print time for
-     */
-    void writeMoveBFB(const int x, const int y, const int z, const Velocity& speed, double extrusion_mm3_per_mm, PrintFeatureType feature);
 public:
     /*!
      * Get ready for extrusion moves:

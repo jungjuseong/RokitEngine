@@ -1541,6 +1541,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
                 if (!mesh_group_settings.get<bool>("magic_spiralize"))
                 {
                     gcode.writeRetraction(retraction_config);
+                    gcode.writeComment("writeRetraction at writeGcode-magic_spiralize");
                 }
             }
         }
@@ -1569,6 +1570,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
             {
                 gcode.writePrimeTrain(extruder.settings.get<Velocity>("speed_travel"));
                 gcode.writeRetraction(retraction_config);
+                gcode.writeComment("writeRetraction at writeGcode-speed_travel");                
             }
 
             if (!path.retract && path.config->isTravelPath() && path.points.size() == 1 && path.points[0] == gcode.getPositionXY() && z == gcode.getPositionZ())
@@ -1596,6 +1598,8 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
             if (path.retract)
             {
                 gcode.writeRetraction(retraction_config);
+                gcode.writeComment("writeRetraction at writeGcode-path.retract");                
+
                 if (path.perform_z_hop)
                 {
                     gcode.writeZhopStart(z_hop_height);
@@ -1731,6 +1735,8 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
             gcode.writeComment("Small layer, adding delay");
             const RetractionConfig& retraction_config = storage.retraction_config_per_extruder[gcode.getExtruderNr()];
             gcode.writeRetraction(retraction_config);
+            gcode.writeComment("writeRetraction at writeGcode-scool_lift_head");                
+
             if (extruder_plan_idx == extruder_plans.size() - 1 || !extruder.settings.get<bool>("machine_extruder_end_pos_abs"))
             { // only move the head if it's the last extruder plan; otherwise it's already at the switching bay area 
                 // or do it anyway when we switch extruder in-place

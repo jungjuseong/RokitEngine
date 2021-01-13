@@ -167,7 +167,8 @@ void Wireframe2gcode::writeGCode()
     gcode.setZ(maxObjectHeight);
     
     gcode.writeRetraction(standard_retraction_config);
-    
+    gcode.writeComment("writeRetraction at Wireframe2gcode::writeGCode");                
+
     gcode.updateTotalPrintTime();
     
     gcode.writeDelay(0.3);
@@ -265,6 +266,8 @@ void Wireframe2gcode::strategy_retract(WeaveConnectionPart& part, unsigned int s
         Point3 lower = to - lowering;
         gcode.writeExtrusion(lower, speedUp, extrusion_mm3_per_mm_connection, PrintFeatureType::OuterWall);
         gcode.writeRetraction(retraction_config);
+        gcode.writeComment("writeRetraction at Wireframe2gcode::strategy_retract");                
+
         gcode.writeTravel(to + lowering, speedUp);
         gcode.writeDelay(top_retract_pause);
         if (after_retract_hop)
@@ -276,6 +279,8 @@ void Wireframe2gcode::strategy_retract(WeaveConnectionPart& part, unsigned int s
     {
         gcode.writeExtrusion(to, speedUp, extrusion_mm3_per_mm_connection, PrintFeatureType::OuterWall);
         gcode.writeRetraction(retraction_config);
+        gcode.writeComment("writeRetraction at Wireframe2gcode::else strategy_retract");                
+
         gcode.writeTravel(to + Point3(0, 0, retract_hop_dist), speedFlat);
         gcode.writeDelay(top_retract_pause);
         if (after_retract_hop)    
@@ -474,7 +479,9 @@ void Wireframe2gcode::writeMoveWithRetract(Point3 to)
 {
     if ((gcode.getPosition() - to).vSize2() >= nozzle_top_diameter * nozzle_top_diameter * 2 * 2)
     {
-       gcode.writeRetraction(standard_retraction_config);
+        gcode.writeRetraction(standard_retraction_config);
+        gcode.writeComment("writeRetraction at Wireframe2gcode::writeMoveWithRetract Point3");                
+
     }
     gcode.writeTravel(to, moveSpeed);
 }
@@ -484,6 +491,8 @@ void Wireframe2gcode::writeMoveWithRetract(Point to)
     if (vSize2(gcode.getPositionXY() - to) >= nozzle_top_diameter * nozzle_top_diameter * 2 * 2) 
     {
         gcode.writeRetraction(standard_retraction_config);
+        gcode.writeComment("writeRetraction at Wireframe2gcode::writeMoveWithRetract Point");                
+
     }
     gcode.writeTravel(to, moveSpeed);
 }
@@ -600,28 +609,7 @@ void Wireframe2gcode::processStartingCode()
             }
         }
     }
-
     gcode.writeCode(scene_settings.get<std::string>("machine_start_gcode").c_str());
-
-    if (gcode.getFlavor() == EGCodeFlavor::BFB)
-    {
-        gcode.writeComment("enable auto-retraction");
-        std::ostringstream tmp;
-        tmp << "M227 S" << (scene_settings.get<coord_t>("retraction_amount") * 2560 / 1000) << " P" << (scene_settings.get<coord_t>("retraction_amount") * 2560 / 1000);
-        gcode.writeLine(tmp.str().c_str());
-    }
-    else if (gcode.getFlavor() == EGCodeFlavor::GRIFFIN)
-    { // initialize extruder trains
-        gcode.writeCode("T0"); // Toolhead already assumed to be at T0, but writing it just to be safe...
-        Application::getInstance().communication->sendCurrentPosition(gcode.getPositionXY());
-
-        gcode.startExtruder(start_extruder_nr);
-
-        constexpr bool wait = true;
-        gcode.writeTemperatureCommand(start_extruder_nr, scene_settings.get<Temperature>("material_print_temperature"), wait);
-        gcode.writePrimeTrain(scene_settings.get<Velocity>("speed_travel"));
-        gcode.writeRetraction(standard_retraction_config);
-    }
 }
 
 void Wireframe2gcode::processSkirt()
@@ -648,7 +636,6 @@ void Wireframe2gcode::processSkirt()
         }
     }
 }
-
 
 void Wireframe2gcode::finalize()
 {

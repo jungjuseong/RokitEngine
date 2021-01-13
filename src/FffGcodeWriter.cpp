@@ -154,6 +154,8 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage, TimeKeeper& time_keep
 
     constexpr bool force = true;
     gcode.writeRetraction(storage.retraction_config_per_extruder[gcode.getExtruderNr()], force); // retract after finishing each meshgroup
+    gcode.writeComment("writeRetraction at writeGcode");
+
 }
 
 unsigned int FffGcodeWriter::findSpiralizedLayerSeamVertexIndex(const SliceDataStorage& storage, const SliceMeshStorage& mesh, const int layer_nr, const int last_layer_nr)
@@ -575,10 +577,8 @@ void FffGcodeWriter::processStartingCode(const SliceDataStorage& storage, const 
 
     gcode.writeExtrusionMode(false); // ensure absolute extrusion mode is set before the start gcode
     gcode.writeCode(mesh_group_settings.get<std::string>("machine_start_gcode").c_str());
-    if (mesh_group_settings.get<bool>("machine_heated_build_volume"))
-    {
+    if (mesh_group_settings.get<bool>("machine_heated_build_volume"))    
         gcode.writeBuildVolumeTemperatureCommand(mesh_group_settings.get<Temperature>("build_volume_temperature"));
-    }
 
     Application::getInstance().communication->sendCurrentPosition(gcode.getPositionXY());
 
@@ -591,12 +591,13 @@ void FffGcodeWriter::processStartingCode(const SliceDataStorage& storage, const 
     {
         // ensure extruder is zeroed
         gcode.resetExtrusionValue();
+        gcode.writeComment("resetExtrusionValue at processStartingCode");
 
         // retract before first travel move
         gcode.writeRetraction(storage.retraction_config_per_extruder[start_extruder_nr]);
+        gcode.writeComment("writeRetraction at processStartingCode");
     }
-    gcode.startExtruder(start_extruder_nr);
-    
+    gcode.startExtruder(start_extruder_nr);    
     // gcode.setExtruderFanNumber(start_extruder_nr);
 }
 
