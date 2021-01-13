@@ -167,7 +167,6 @@ void Wireframe2gcode::writeGCode()
     gcode.setZ(maxObjectHeight);
     
     gcode.writeRetraction(standard_retraction_config);
-    gcode.writeComment("writeRetraction at Wireframe2gcode::writeGCode");                
 
     gcode.updateTotalPrintTime();
     
@@ -266,7 +265,6 @@ void Wireframe2gcode::strategy_retract(WeaveConnectionPart& part, unsigned int s
         Point3 lower = to - lowering;
         gcode.writeExtrusion(lower, speedUp, extrusion_mm3_per_mm_connection, PrintFeatureType::OuterWall);
         gcode.writeRetraction(retraction_config);
-        gcode.writeComment("writeRetraction at Wireframe2gcode::strategy_retract");                
 
         gcode.writeTravel(to + lowering, speedUp);
         gcode.writeDelay(top_retract_pause);
@@ -279,7 +277,6 @@ void Wireframe2gcode::strategy_retract(WeaveConnectionPart& part, unsigned int s
     {
         gcode.writeExtrusion(to, speedUp, extrusion_mm3_per_mm_connection, PrintFeatureType::OuterWall);
         gcode.writeRetraction(retraction_config);
-        gcode.writeComment("writeRetraction at Wireframe2gcode::else strategy_retract");                
 
         gcode.writeTravel(to + Point3(0, 0, retract_hop_dist), speedFlat);
         gcode.writeDelay(top_retract_pause);
@@ -480,8 +477,6 @@ void Wireframe2gcode::writeMoveWithRetract(Point3 to)
     if ((gcode.getPosition() - to).vSize2() >= nozzle_top_diameter * nozzle_top_diameter * 2 * 2)
     {
         gcode.writeRetraction(standard_retraction_config);
-        gcode.writeComment("writeRetraction at Wireframe2gcode::writeMoveWithRetract Point3");                
-
     }
     gcode.writeTravel(to, moveSpeed);
 }
@@ -491,8 +486,6 @@ void Wireframe2gcode::writeMoveWithRetract(Point to)
     if (vSize2(gcode.getPositionXY() - to) >= nozzle_top_diameter * nozzle_top_diameter * 2 * 2) 
     {
         gcode.writeRetraction(standard_retraction_config);
-        gcode.writeComment("writeRetraction at Wireframe2gcode::writeMoveWithRetract Point");                
-
     }
     gcode.writeTravel(to, moveSpeed);
 }

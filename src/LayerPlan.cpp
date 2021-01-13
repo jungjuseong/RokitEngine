@@ -266,10 +266,9 @@ void LayerPlan::setIsInside(bool _is_inside)
 
 bool LayerPlan::setExtruder(const size_t extruder_nr)
 {
-    if (extruder_nr == getExtruder())
-    {
+    if (extruder_nr == getExtruder())    
         return false;
-    }
+    
     setIsInside(false);
     { // handle end position of the prev extruder
         ExtruderTrain* extruder = getLastPlannedExtruderTrain();
@@ -284,11 +283,10 @@ bool LayerPlan::setExtruder(const size_t extruder_nr)
             const Point extruder_offset(extruder->settings.get<coord_t>("machine_nozzle_offset_x"), extruder->settings.get<coord_t>("machine_nozzle_offset_y"));
             end_pos += extruder_offset; // absolute end pos is given as a head position
         }
-        if (end_pos_absolute || last_planned_position)
-        {
-            addTravel(end_pos); //  + extruder_offset cause it
-        }
+        if (end_pos_absolute || last_planned_position)        
+            addTravel(end_pos); //  + extruder_offset cause it        
     }
+
     if (extruder_plans.back().paths.empty() && extruder_plans.back().inserts.empty())
     { // first extruder plan in a layer might be empty, cause it is made with the last extruder planned in the previous layer
         extruder_plans.back().extruder_nr = extruder_nr;
@@ -304,22 +302,20 @@ bool LayerPlan::setExtruder(const size_t extruder_nr)
         ExtruderTrain* extruder = getLastPlannedExtruderTrain();
         const bool start_pos_absolute = extruder->settings.get<bool>("machine_extruder_start_pos_abs");
         Point start_pos(extruder->settings.get<coord_t>("machine_extruder_start_pos_x"), extruder->settings.get<coord_t>("machine_extruder_start_pos_y"));
-        if (!start_pos_absolute)
-        {
-            start_pos += getLastPlannedPositionOrStartingPosition();
-        }
+        if (!start_pos_absolute)        
+            start_pos += getLastPlannedPositionOrStartingPosition();        
         else 
         {
             Point extruder_offset(extruder->settings.get<coord_t>("machine_nozzle_offset_x"), extruder->settings.get<coord_t>("machine_nozzle_offset_y"));
             start_pos += extruder_offset; // absolute start pos is given as a head position
         }
         if (start_pos_absolute || last_planned_position)
-        {
             last_planned_position = start_pos;
-        }
+        
     }
     return true;
 }
+
 void LayerPlan::setMesh(const std::string mesh_id)
 {
     current_mesh = mesh_id;
@@ -587,10 +583,9 @@ void LayerPlan::addPolygon(ConstPolygonRef polygon, int start_idx, const GCodePa
 
 void LayerPlan::addPolygonsByOptimizer(const Polygons& polygons, const GCodePathConfig& config, WallOverlapComputation* wall_overlap_computation, const ZSeamConfig& z_seam_config, coord_t wall_0_wipe_dist, bool spiralize, const Ratio flow_ratio, bool always_retract, bool reverse_order, std::optional<Point> start_near_location)
 {
-    if (polygons.size() == 0)
-    {
+    if (polygons.size() == 0)    
         return;
-    }
+    
     PathOrderOptimizer orderOptimizer(start_near_location ? start_near_location.value() : getLastPlannedPositionOrStartingPosition(), z_seam_config);
     for (unsigned int poly_idx = 0; poly_idx < polygons.size(); poly_idx++)
     {
@@ -1500,10 +1495,8 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
                 z_hop_height = storage.extruder_switch_retraction_config_per_extruder[prev_extruder].zHop;
                 gcode.switchExtruder(extruder_nr, storage.extruder_switch_retraction_config_per_extruder[prev_extruder], z_hop_height);
             }
-            else
-            {
-                gcode.switchExtruder(extruder_nr, storage.extruder_switch_retraction_config_per_extruder[prev_extruder]);
-            }
+            else            
+                gcode.switchExtruder(extruder_nr, storage.extruder_switch_retraction_config_per_extruder[prev_extruder]);            
 
             const ExtruderTrain& extruder = Application::getInstance().current_slice->scene.extruders[extruder_nr];
 
@@ -1541,7 +1534,6 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
                 if (!mesh_group_settings.get<bool>("magic_spiralize"))
                 {
                     gcode.writeRetraction(retraction_config);
-                    gcode.writeComment("writeRetraction at writeGcode-magic_spiralize");
                 }
             }
         }
@@ -1570,61 +1562,45 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
             {
                 gcode.writePrimeTrain(extruder.settings.get<Velocity>("speed_travel"));
                 gcode.writeRetraction(retraction_config);
-                gcode.writeComment("writeRetraction at writeGcode-speed_travel");                
             }
 
             if (!path.retract && path.config->isTravelPath() && path.points.size() == 1 && path.points[0] == gcode.getPositionXY() && z == gcode.getPositionZ())
-            {
                 // ignore travel moves to the current location to avoid needless change of acceleration/jerk
-                continue;
-            }
+                continue;            
 
             if (acceleration_enabled)
             {
-                if (path.config->isTravelPath())
-                {
-                    gcode.writeTravelAcceleration(path.config->getAcceleration());
-                }
-                else
-                {
-                    gcode.writePrintAcceleration(path.config->getAcceleration());
-                }
+                if (path.config->isTravelPath())                
+                    gcode.writeTravelAcceleration(path.config->getAcceleration());                
+                else                
+                    gcode.writePrintAcceleration(path.config->getAcceleration());                
             }
-            if (jerk_enabled)
-            {
+            if (jerk_enabled)            
                 gcode.writeJerk(path.config->getJerk());
-            }
-
+            
             if (path.retract)
             {
                 gcode.writeRetraction(retraction_config);
-                gcode.writeComment("writeRetraction at writeGcode-path.retract");                
-
                 if (path.perform_z_hop)
                 {
                     gcode.writeZhopStart(z_hop_height);
                     z_hop_height = retraction_config.zHop; // back to normal z hop
                 }
-                else
-                {
-                    gcode.writeZhopEnd();
-                }
+                else                
+                    gcode.writeZhopEnd();                
             }
             if (!path.config->isTravelPath() && last_extrusion_config != path.config)
             {
                 gcode.writeTypeComment(path.config->type);
-                if (path.config->isBridgePath())
-                {
+                if (path.config->isBridgePath())                
                     gcode.writeComment("BRIDGE");
-                }
+                
                 last_extrusion_config = path.config;
                 update_extrusion_offset = true;
             }
-            else
-            {
+            else            
                 update_extrusion_offset = false;
-            }
-
+            
             double speed = path.config->getSpeed();
 
             // for some movements such as prime tower purge, the speed may get changed by this factor
@@ -1735,7 +1711,6 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
             gcode.writeComment("Small layer, adding delay");
             const RetractionConfig& retraction_config = storage.retraction_config_per_extruder[gcode.getExtruderNr()];
             gcode.writeRetraction(retraction_config);
-            gcode.writeComment("writeRetraction at writeGcode-scool_lift_head");                
 
             if (extruder_plan_idx == extruder_plans.size() - 1 || !extruder.settings.get<bool>("machine_extruder_end_pos_abs"))
             { // only move the head if it's the last extruder plan; otherwise it's already at the switching bay area 

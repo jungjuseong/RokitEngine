@@ -154,8 +154,6 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage, TimeKeeper& time_keep
 
     constexpr bool force = true;
     gcode.writeRetraction(storage.retraction_config_per_extruder[gcode.getExtruderNr()], force); // retract after finishing each meshgroup
-    gcode.writeComment("writeRetraction at writeGcode");
-
 }
 
 unsigned int FffGcodeWriter::findSpiralizedLayerSeamVertexIndex(const SliceDataStorage& storage, const SliceMeshStorage& mesh, const int layer_nr, const int last_layer_nr)
@@ -595,7 +593,6 @@ void FffGcodeWriter::processStartingCode(const SliceDataStorage& storage, const 
 
         // retract before first travel move
         gcode.writeRetraction(storage.retraction_config_per_extruder[start_extruder_nr]);
-        gcode.writeComment("writeRetraction at processStartingCode");
     }
     gcode.startExtruder(start_extruder_nr);    
     // gcode.setExtruderFanNumber(start_extruder_nr);
