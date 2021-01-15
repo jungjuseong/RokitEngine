@@ -1480,7 +1480,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
         const RetractionConfig& retraction_config = storage.retraction_config_per_extruder[extruder_plan.extruder_nr];
         coord_t z_hop_height = retraction_config.zHop;
 
-        gcode.startExtruder(extruder_plan.extruder_nr);
+        // gcode.startExtruder(extruder_plan.extruder_nr);
 
         if (extruder_nr != extruder_plan.extruder_nr)
         {

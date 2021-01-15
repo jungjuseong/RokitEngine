@@ -550,7 +550,7 @@ void GCodeExport::resetExtrusionValue()
         ExtruderTrainAttributes& extr_attr = extruder_attr[current_extruder];
 
         if (!relative_extrusion)        
-            *output_stream << "G92 E0 ;" << PrecisionedDouble{5, current_e_value} << new_line;
+            *output_stream << "G92 E0" << new_line;
             
         double current_extruded_volume = getCurrentExtrudedVolume();
         extr_attr.totalFilament += current_extruded_volume;
@@ -952,6 +952,8 @@ void GCodeExport::switchExtruder(size_t new_extruder, const RetractionConfig& re
 {   
     const Settings& old_extruder_settings = Application::getInstance().current_slice->scene.extruders[current_extruder].settings;
     const bool retraction_enabled = old_extruder_settings.get<bool>("retraction_enable");
+
+    // writeComment("switchExtruder");
 
     if (current_extruder != new_extruder) {
         if (retraction_enabled) {
