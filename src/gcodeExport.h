@@ -156,11 +156,28 @@ private:
     Temperature build_volume_temperature;  //!< build volume temperature
     bool machine_heated_build_volume;  //!< does the machine have the ability to control/stabilize build-volume-temperature
 
+    const std::string LEFT_BED = "G54 G0 X0.0 Y0.0 ;(HOTMELT/EXTRUDER)";
+    const std::string RIGHT_BED = "G55 G0 X0.0 Y0.0 ;(ROTARY)";
+    const char *A_AXIS_POS[6] = {"0.00", "0.00", "-72.00", "72.00", "144.00", "-144.00"};
+
+    struct StartPoint { 
+        std::string x;
+        std::string y;
+    };
+    const std::map<std::string, StartPoint> JumpPosition = {
+        {"6",  {"-19.50","39.00"}}, 
+        {"12", {"-26.00","39.00"}},
+        {"24", {"-28.95","48.25"}},
+        {"48", {"-32.25","45.15"}},
+        {"96", {"-31.50","49.50"}}
+    };
+
     bool is_traveling;
     bool first_extruder_setting_done;
     
-    void outputBodyStartCode(const size_t extruder_nr, std::string nozzle_id);
-    void outputToolSetupCode(const size_t extruder_nr, const std::string nozzle_id);
+    void toolSetupCode(size_t extruder_nr, bool move_bed = false);
+    void outputBodySetupCode(const size_t extruder_nr);
+    void outputToolSetupCode(const size_t extruder_nr);
     
 protected:
     /*!

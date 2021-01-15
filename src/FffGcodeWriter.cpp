@@ -580,7 +580,7 @@ void FffGcodeWriter::processStartingCode(const SliceDataStorage& storage, const 
 
     Application::getInstance().communication->sendCurrentPosition(gcode.getPositionXY());
 
-    //gcode.startExtruder(start_extruder_nr);
+    //gcode.startExtruder(start_extruder_nr);  // remove it because it always D6
 
     if (extruder_settings.get<bool>("relative_extrusion"))    
         gcode.writeExtrusionMode(true);    
@@ -589,12 +589,11 @@ void FffGcodeWriter::processStartingCode(const SliceDataStorage& storage, const 
     {
         // ensure extruder is zeroed
         gcode.resetExtrusionValue();
-        gcode.writeComment("resetExtrusionValue at processStartingCode");
 
         // retract before first travel move
         gcode.writeRetraction(storage.retraction_config_per_extruder[start_extruder_nr]);
     }
-    gcode.startExtruder(start_extruder_nr);    
+    // gcode.startExtruder(start_extruder_nr);    // remove it because it always D6
     // gcode.setExtruderFanNumber(start_extruder_nr);
 }
 
@@ -605,6 +604,7 @@ void FffGcodeWriter::processNextMeshGroupCode(const SliceDataStorage& storage)
 
     Application::getInstance().communication->sendCurrentPosition(gcode.getPositionXY());
     gcode.writeTravel(gcode.getPositionXY(), Application::getInstance().current_slice->scene.extruders[gcode.getExtruderNr()].settings.get<Velocity>("speed_travel"));
+    
     Point start_pos(storage.model_min.x, storage.model_min.y);
     gcode.writeTravel(start_pos, Application::getInstance().current_slice->scene.extruders[gcode.getExtruderNr()].settings.get<Velocity>("speed_travel"));
 

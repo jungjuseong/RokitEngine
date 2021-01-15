@@ -680,17 +680,17 @@ void GCodeExport::writeExtrusion(const int x, const int y, const int z, const Ve
 
 void GCodeExport::writeFXYZE(const Velocity& speed, const int x, const int y, const int z, const double e, const PrintFeatureType& feature)
 {
-    if (currentSpeed != speed)
+    if (currentSpeed != speed || currentPosition.z != z)
     {
         *output_stream << " F" << PrecisionedDouble{1, speed * 60};
         currentSpeed = speed;
     }
     Point gcode_pos = getGcodePos(x, y, current_extruder);
     total_bounding_box.include(Point3(gcode_pos.X, gcode_pos.Y, z));
-
     *output_stream << " X" << MMtoStream{gcode_pos.X} << " Y" << MMtoStream{gcode_pos.Y};
+
     if (currentPosition.z != z)    
-        *output_stream << new_line << "G0 " << (current_extruder == 0 ? "Z" : "C") << MMtoStream{z};
+        *output_stream << new_line << "G0 " << (current_extruder == 0 ? "Z" : "C") << MMtoStream{z};    
 
     if (getNozzleId(current_extruder).compare(0,3,"Ext") == 0) 
     {
@@ -824,13 +824,12 @@ void GCodeExport::writeZhopStart(const coord_t hop_height, Velocity speed/*= 0*/
 
 void GCodeExport::writeZhopEnd(Velocity speed/*= 0*/)
 {
+    const ExtruderTrain& extruder = Application::getInstance().current_slice->scene.extruders[current_extruder];
     if (is_z_hopped)
     {
-        if (speed == 0)
-        {
-            const ExtruderTrain& extruder = Application::getInstance().current_slice->scene.extruders[current_extruder];
+        if (speed == 0)        
             speed = extruder.settings.get<Velocity>("speed_z_hop");
-        }
+        
         is_z_hopped = 0;
         currentPosition.z = current_layer_z;
         currentSpeed = speed;
@@ -839,28 +838,57 @@ void GCodeExport::writeZhopEnd(Velocity speed/*= 0*/)
     }
 }
 
-const std::string LEFT_BED = "G54 G0 X0.0 Y0.0 ;(HOTMELT/EXTRUDER)";
-const std::string RIGHT_BED = "G55 G0 X0.0 Y0.0 ;(ROTARY)";
-const char *A_AXIS_POS[6] = {"0.00", "0.00", "-72.00", "72.00", "144.00", "-144.00"};
+// const std::string LEFT_BED = "G54 G0 X0.0 Y0.0 ;(HOTMELT/EXTRUDER)";
+// const std::string RIGHT_BED = "G55 G0 X0.0 Y0.0 ;(ROTARY)";
+// const char *A_AXIS_POS[6] = {"0.00", "0.00", "-72.00", "72.00", "144.00", "-144.00"};
 
-struct StartPoint { 
-    std::string x;
-    std::string y;
-};
-const std::map<std::string, StartPoint> JumpPosition = {
-    {"6",  {"-19.50","39.00"}}, 
-    {"12", {"-26.00","39.00"}},
-    {"24", {"-28.95","48.25"}},
-    {"48", {"-32.25","45.15"}},
-    {"96", {"-31.50","49.50"}}
-};
+// struct StartPoint { 
+//     std::string x;
+//     std::string y;
+// };
+// const std::map<std::string, StartPoint> JumpPosition = {
+//     {"6",  {"-19.50","39.00"}}, 
+//     {"12", {"-26.00","39.00"}},
+//     {"24", {"-28.95","48.25"}},
+//     {"48", {"-32.25","45.15"}},
+//     {"96", {"-31.50","49.50"}}
+// };
 
-void GCodeExport::outputBodyStartCode(const size_t extruder_nr, const std::string nozzle_id)
+void GCodeExport::toolSetupCode(size_t extruder_nr, bool move_bed)
+{
+    std::string nozzle_id = getNozzleId(extruder_nr);
+
+    *output_stream << ";TOOL_SETUP:" << nozzle_id.c_str() << " - " << extruder_nr << new_line;;
+
+    if (extruder_nr == 0) // LEFT Tools
+    {
+        if (move_bed)
+            *output_stream << LEFT_BED << new_line;
+
+        *output_stream << "D6" << new_line;
+        if (nozzle_id.compare(0,3,"Ext") == 0)
+        {
+            *output_stream << "M301" << new_line;
+            is_traveling = 0;            
+        }
+    }
+    else // RIGHT Tools
+    {
+        if (move_bed)
+            *output_stream << RIGHT_BED << new_line;
+        *output_stream << "D" << extruder_nr << new_line;
+        *output_stream << "G0 A" << A_AXIS_POS[extruder_nr] << " F600" << new_line;
+        *output_stream << "G0 B15.0 F300" << new_line;
+    }
+    *output_stream << ";END" << new_line;  
+}
+
+void GCodeExport::outputBodySetupCode(const size_t extruder_nr)
 {
     const Settings& scene_settings = Application::getInstance().current_slice->scene.settings;
     const std::string build_dish_type = scene_settings.get<std::string>("machine_build_dish_type");
 
-    // Add HOPPING code when dish type is the WellPlate and tool is the Dispenser
+    // Add HOPPING code when dish type is the WellPlate and tool is the Dispenser only
     if (build_dish_type.substr(0,10).compare("Well Plate") == 0) 
     {
         if (extruder_nr == 0) // do not WellPlate when Left device
@@ -873,95 +901,51 @@ void GCodeExport::outputBodyStartCode(const size_t extruder_nr, const std::strin
         *output_stream << "G0 " << "X" << JumpPosition.at(well).x << " Y" << JumpPosition.at(well).y << '\n';
         *output_stream << "G92 X0.00 Y0.00" << '\n';
         *output_stream << ";END" << '\n';
-
-        *output_stream << ";BODY_START" << '\n';
-        *output_stream << ";TOOL_SETUP FROM_MESH: " << nozzle_id.c_str() << " - " << extruder_nr << new_line;
-        *output_stream << "D" + std::to_string(extruder_nr) << '\n';
-        *output_stream << "G0 A" << A_AXIS_POS[extruder_nr] << " F600" << new_line;
-        *output_stream << "G0 B15.0 F300" << new_line;
-    } 
-    else
-    {
-        *output_stream << ";BODY_START" << '\n';
-        *output_stream << ";TOOL_SETUP FROM_MESH: " << nozzle_id.c_str() << " - " << extruder_nr << new_line;
-        *output_stream << (extruder_nr == 0 ? LEFT_BED : RIGHT_BED) << '\n';
-        *output_stream << (extruder_nr == 0 ? "D6" : "D" + std::to_string(extruder_nr)) << '\n';
-
-        if (extruder_nr == 0) 
-        {
-            if (nozzle_id.compare(0,3,"Ext") == 0)
-            {
-                *output_stream << "M301" << new_line;
-                is_traveling = 0;
-            }
-        } 
-        else 
-        {
-            *output_stream << "G0 A" << A_AXIS_POS[extruder_nr] << " F600" << new_line;
-            *output_stream << "G0 B15.0 F300" << new_line;
-        }
     }
-    *output_stream << ";END" << new_line;    
+
+    *output_stream << ";BODY_START" << new_line;
+    toolSetupCode(extruder_nr, true);   
 }
 
-void GCodeExport::outputToolSetupCode(const size_t extruder_nr, const std::string nozzle_id)
+void GCodeExport::outputToolSetupCode(const size_t extruder_nr)
 {
-        if (is_traveling == 0)
-        {            
-            *output_stream << "M330" << new_line;
-            is_traveling = 1;
-        }
-
-        *output_stream << ";TOOL_SETUP:" << nozzle_id.c_str() << " - " << nozzle_id << new_line;;
-
-        if (extruder_nr == 0) // LEFT Tools
-        {
-            *output_stream << "D6" << new_line;
-            if (nozzle_id.compare(0,3,"Ext") == 0)
-            {
-                *output_stream << "M301" << new_line;
-                is_traveling = 0;
-            }
-        }
-        else // RIGHT Tools
-        {
-            *output_stream << "D" << extruder_nr << new_line;
-            *output_stream << "G0 A" << A_AXIS_POS[extruder_nr] << " F600" << new_line;
-            *output_stream << "G0 B15.0 F300" << new_line;
-        }
-        *output_stream << ";END" << new_line;     
+    if (getNozzleId(extruder_nr).compare(0,3,"Ext") == 0 && is_traveling == 0)
+    {            
+        *output_stream << "M330" << new_line;
+        is_traveling = 1;
+    } 
+    toolSetupCode(extruder_nr, false); 
 }
 
 void GCodeExport::startExtruder(const size_t new_extruder)
 {
     extruder_attr[new_extruder].is_used = true;
 
-    if (!first_extruder_setting_done) 
+    if (first_extruder_setting_done == false) 
     {
-        outputBodyStartCode(new_extruder, getNozzleId(new_extruder)); 
-
+        outputBodySetupCode(new_extruder); 
         first_extruder_setting_done = true;
-        current_extruder = new_extruder;
     }
-
-    if (first_extruder_setting_done && new_extruder != current_extruder) // wouldn't be the case on the very first extruder start if it's extruder 0
+    else
     {
-        outputToolSetupCode(new_extruder, getNozzleId(new_extruder));     
-        current_extruder = new_extruder;
+        if (new_extruder != current_extruder) // wouldn't be the case on the very first extruder start if it's extruder 0
+        {
+            outputToolSetupCode(new_extruder);     
+        }
+
+        assert(getCurrentExtrudedVolume() == 0.0 && "Just after an extruder switch we haven't extruded anything yet!");
+        
+        //resetExtrusionValue(); // zero the E value on the new extruder, just to be sure
+
+        const ExtruderTrain& new_extruder_train = Application::getInstance().current_slice->scene.extruders[new_extruder];
+        Application::getInstance().communication->setExtruderForSend(new_extruder_train);
+        Application::getInstance().communication->sendCurrentPosition(getPositionXY());
+
+        //Change the Z position so it gets re-written again. We do not know if the switch code modified the Z position.
+        currentPosition.z += 1;
     }
-
-    assert(getCurrentExtrudedVolume() == 0.0 && "Just after an extruder switch we haven't extruded anything yet!");
-    
-    //resetExtrusionValue(); // zero the E value on the new extruder, just to be sure
-
-    const ExtruderTrain& new_extruder_train = Application::getInstance().current_slice->scene.extruders[new_extruder];
-    Application::getInstance().communication->setExtruderForSend(new_extruder_train);
-    Application::getInstance().communication->sendCurrentPosition(getPositionXY());
-
-    //Change the Z position so it gets re-written again. We do not know if the switch code modified the Z position.
-    currentPosition.z += 1;
-
     setExtruderFanNumber(new_extruder);
+    current_extruder = new_extruder;
 }
 
 void GCodeExport::switchExtruder(size_t new_extruder, const RetractionConfig& retraction_config_old_extruder, coord_t perform_z_hop /*= 0*/)
@@ -969,19 +953,18 @@ void GCodeExport::switchExtruder(size_t new_extruder, const RetractionConfig& re
     const Settings& old_extruder_settings = Application::getInstance().current_slice->scene.extruders[current_extruder].settings;
     const bool retraction_enabled = old_extruder_settings.get<bool>("retraction_enable");
 
-    if (current_extruder == new_extruder) 
-        return;
+    if (current_extruder != new_extruder) {
+        if (retraction_enabled) {
+            writeRetraction(retraction_config_old_extruder, true, true);   
+        } 
 
-    if (retraction_enabled) {
-        writeRetraction(retraction_config_old_extruder, true, true);   
-    } 
+        if (perform_z_hop > 0)    
+            writeZhopStart(perform_z_hop);
 
-    if (perform_z_hop > 0)    
-        writeZhopStart(perform_z_hop);
+        resetExtrusionValue(); // zero the E value on the old extruder, so that the current_e_value is registered on the old extruder
 
-    resetExtrusionValue(); // zero the E value on the old extruder, so that the current_e_value is registered on the old extruder
-
-    startExtruder(new_extruder);
+        startExtruder(new_extruder);
+    }
 }
 
 void GCodeExport::writeCode(const char* str)
