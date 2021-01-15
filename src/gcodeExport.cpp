@@ -955,7 +955,7 @@ void GCodeExport::switchExtruder(size_t new_extruder, const RetractionConfig& re
 
     // writeComment("switchExtruder");
 
-    if (current_extruder != new_extruder) {
+    if (first_extruder_setting_done && current_extruder != new_extruder) {
         if (retraction_enabled) {
             writeRetraction(retraction_config_old_extruder, true, true);   
         } 
